@@ -1,4 +1,3 @@
-// storage/PollutionStorage.java
 package it.unimi.adminserver.storage;
 
 import it.unimi.adminserver.model.PollutionRecord;

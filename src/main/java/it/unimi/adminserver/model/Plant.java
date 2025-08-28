@@ -2,22 +2,38 @@ package it.unimi.adminserver.model;
 
 public class Plant {
     private String id;
-    private String address;
+    private static final String address = "localhost";
     private int port;
 
     public Plant() {}
 
-    public Plant(String id, String address, int port) {
-        this.id = id;
-        this.address = address;
-        this.port = port;
+    public Plant(String id, int port) {
+        setId(id);
+        setPort(port);
     }
 
     public String getId() { return id; }
-    public String getAddress() { return address; }
     public int getPort() { return port; }
 
-    public void setId(String id) { this.id = id; }
-    public void setAddress(String address) { this.address = address; }
-    public void setPort(int port) { this.port = port; }
+    public void setId(String id) {
+        if (id == null || id.trim().isEmpty()) {
+            throw new IllegalArgumentException("id must be non-null and non-empty");
+        }
+        this.id = id;
+    }
+
+    public void setPort(int port) {
+        if (port < 1 || port > 65535) {
+            throw new IllegalArgumentException("port must be between 1 and 65535");
+        }
+        this.port = port;
+    }
+
+    @Override
+    public String toString() {
+        return "Plant{" +
+                "id='" + id + '\'' +
+                ", port=" + port +
+                '}';
+    }
 }

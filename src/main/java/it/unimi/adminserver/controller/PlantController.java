@@ -1,9 +1,8 @@
-// controller/PlantController.java
 package it.unimi.adminserver.controller;
 
 import it.unimi.adminserver.model.Plant;
-import it.unimi.adminserver.storage.PlantRegistry;
-import org.springframework.http.*;
+import it.unimi.adminserver.storage.PlantStorage;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,30 +11,36 @@ import java.util.List;
 @RequestMapping("/plants")
 public class PlantController {
 
-    private final PlantRegistry registry = PlantRegistry.getInstance();
+    private final PlantStorage storage = new PlantStorage();
 
     @GetMapping
-    public List<Plant> getPlants() {
-        return registry.getPlants();
+    public ResponseEntity<List<Plant>> getAllPlants() throws InterruptedException {
+        return ResponseEntity.ok(storage.getAllPlants());
     }
 
     @PostMapping
-    public ResponseEntity<?> addPlant(@RequestBody Plant plant) {
-        boolean added = registry.addPlant(plant);
-        if (!added) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Plant with same ID already exists");
+    public ResponseEntity<?> addPlant(@RequestBody Plant plant) throws InterruptedException {
+        try {
+            // Validate incoming object using model setters if not already invoked by constructor
+            // Some serializers may bypass constructor, so enforce here
+            plant.setId(plant.getId());
+            plant.setPort(plant.getPort());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return ResponseEntity.ok(registry.getPlants());
+        boolean added = storage.addPlant(plant);
+        if (!added) {
+            return ResponseEntity.status(409).body("Plant with same id already exists");
+        }
+        return ResponseEntity.ok(storage.getAllPlants());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> removePlant(@PathVariable String id) {
-        boolean removed = registry.removePlant(id);
+    public ResponseEntity<?> removePlant(@PathVariable String id) throws InterruptedException {
+        boolean removed = storage.removePlant(id);
         if (!removed) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Plant not found");
+            return ResponseEntity.status(404).body("Plant not found");
         }
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Removed plant " + id);
     }
 }
