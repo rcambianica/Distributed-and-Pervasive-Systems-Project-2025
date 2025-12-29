@@ -14,7 +14,7 @@ public class RenewableEnergyProvider {
     public RenewableEnergyProvider(String clientId) throws MqttException {
         this.client = new MqttClient(MQTT_BROKER, clientId);
         client.connect();
-        System.out.println("REP connesso al broker MQTT");
+        System.out.println("Renewable Energy Provider connesso al broker MQTT");
     }
 
     public void start() {
@@ -25,7 +25,7 @@ public class RenewableEnergyProvider {
                     String payload = req.toString();
                     client.publish(TOPIC, new MqttMessage(payload.getBytes()));
                     System.out.println("Pubblicata richiesta: " + payload);
-                    Thread.sleep(10000); // 10 secondi
+                    Thread.sleep(10000);    //10 sec interval
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -35,7 +35,7 @@ public class RenewableEnergyProvider {
     }
 
     private EnergyRequest generateRequest() {
-        int amount = 5000 + rnd.nextInt(10001); // 5000-15000
+        int amount = 5000 + rnd.nextInt(10001); // 5000-15000 range
         return new EnergyRequest(amount);
     }
 

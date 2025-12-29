@@ -21,7 +21,7 @@ public class PlantController {
     @PostMapping
     public ResponseEntity<?> addPlant(@RequestBody Plant plant) throws InterruptedException {
         try {
-            // Validate incoming object using model setters if not already invoked by constructor
+            // Validate incoming objects using model setters if not already invoked by constructor
             // Some serializers may bypass constructor, so enforce here
             plant.setId(plant.getId());
             plant.setPort(plant.getPort());

@@ -33,7 +33,7 @@ public class PollutionController {
     /**
      * Restituisce la media delle emissioni di CO2 in un intervallo temporale [t1, t2].
      * Corrisponde al metodo che il tuo Administration Client chiama con getAverageCO2.
-     */
+     **/
     @GetMapping("/average")
     public ResponseEntity<Double> getAverage(
             @RequestParam long t1,

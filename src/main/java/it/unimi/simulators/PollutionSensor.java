@@ -26,7 +26,7 @@ public class PollutionSensor extends Simulator {
             double co2 = getCO2Value(i);
             addMeasurement(co2);
 
-            waitingTime = 2000;
+            waitingTime = 1000;
             sensorSleep(waitingTime);
 
             i+=0.2;

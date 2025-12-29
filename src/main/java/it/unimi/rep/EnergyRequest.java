@@ -3,27 +3,32 @@ package it.unimi.rep;
 import java.time.Instant;
 
 public class EnergyRequest {
-    private int amount; // kWh
-    private long timestamp; // ms
+    private final long timestamp;
+    private final int amount; // kWh richiesti
 
-    public EnergyRequest(int amount) {
+    public EnergyRequest(long timestamp, int amount) {
+        this.timestamp = timestamp;
         this.amount = amount;
-        this.timestamp = Instant.now().toEpochMilli();
     }
 
-    public int getAmount() {
-        return amount;
+    public EnergyRequest(int amount) {
+        this.timestamp = Instant.now().toEpochMilli();
+        this.amount = amount;
     }
 
     public long getTimestamp() {
         return timestamp;
     }
 
+    public int getAmount() {
+        return amount;
+    }
+
     @Override
     public String toString() {
         return "EnergyRequest{" +
-                "amount=" + amount +
-                ", timestamp=" + timestamp +
-                '}';
+                "timestamp=" + timestamp +
+                ", amount=" + amount +
+                "kWh}";
     }
 }
