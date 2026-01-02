@@ -3,7 +3,7 @@ package it.unimi.rep;
 import java.time.Instant;
 
 public class EnergyRequest {
-    private final long timestamp;
+    private final long timestamp;   //concettualmente svolge anche ruolo di id della richiesta
     private final int amount; // kWh richiesti
 
     public EnergyRequest(long timestamp, int amount) {
@@ -28,7 +28,6 @@ public class EnergyRequest {
     public String toString() {
         return "EnergyRequest{" +
                 "timestamp=" + timestamp +
-                ", amount=" + amount +
-                "kWh}";
+                ", amount=" + amount;
     }
 }

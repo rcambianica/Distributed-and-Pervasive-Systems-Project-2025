@@ -1,20 +1,28 @@
 package it.unimi.rep;
 
-import org.eclipse.paho.client.mqttv3.*;
+
 import java.util.Random;
+
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class RenewableEnergyProvider {
 
     private static final String MQTT_BROKER = "tcp://localhost:1883";
     private static final String TOPIC = "energy/requests";
+    private static final Logger logger =
+            LoggerFactory.getLogger(RenewableEnergyProvider.class);
 
     private final MqttClient client;
     private final Random rnd = new Random();
-
     public RenewableEnergyProvider(String clientId) throws MqttException {
         this.client = new MqttClient(MQTT_BROKER, clientId);
         client.connect();
-        System.out.println("Renewable Energy Provider connesso al broker MQTT");
+        logger.info("Renewable Energy Provider connected to the MQTT broker");
     }
 
     public void start() {
@@ -22,9 +30,9 @@ public class RenewableEnergyProvider {
             while(true) {
                 try {
                     EnergyRequest req = generateRequest();
-                    String payload = req.toString();
+                    String payload = EnergyRequestMapper.serialize(req);
                     client.publish(TOPIC, new MqttMessage(payload.getBytes()));
-                    System.out.println("Pubblicata richiesta: " + payload);
+                    logger.debug("Request published: {}", payload);
                     Thread.sleep(10000);    //10 sec interval
                 } catch (Exception e) {
                     e.printStackTrace();

@@ -5,11 +5,11 @@ import it.unimi.simulators.Measurement;
 import java.util.List;
 
 public class AverageMeasurement {
-    private final String plantId;
+    private final int plantId;
     private final double value;
     private final long timestamp;
 
-    public String getPlantId() {
+    public int getPlantId() {
         return plantId;
     }
 
@@ -21,13 +21,13 @@ public class AverageMeasurement {
         return timestamp;
     }
 
-    private AverageMeasurement(String plantId, double value, long timestamp) {
+    private AverageMeasurement(int plantId, double value, long timestamp) {
         this.plantId = plantId;
         this.value = value;
         this.timestamp = timestamp;
     }
 
-    public static AverageMeasurement from(List<Measurement> window, String plantId) {
+    public static AverageMeasurement from(List<Measurement> window, int plantId) {
         double avg = window.stream()
                 .mapToDouble(Measurement::getValue)
                 .average()

@@ -36,7 +36,7 @@ public class PlantController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> removePlant(@PathVariable String id) throws InterruptedException {
+    public ResponseEntity<?> removePlant(@PathVariable int id) throws InterruptedException {
         boolean removed = storage.removePlant(id);
         if (!removed) {
             return ResponseEntity.status(404).body("Plant not found");

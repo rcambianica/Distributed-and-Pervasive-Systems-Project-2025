@@ -3,175 +3,217 @@ package it.unimi.tpp;
 import it.unimi.adminclient.RestClient;
 import it.unimi.adminserver.model.Plant;
 import it.unimi.adminserver.model.PollutionRecord;
+import it.unimi.grpc.PlantCoordinationServiceGrpc;
+import it.unimi.grpc.PlantCoordinationServiceOuterClass.*;
 import it.unimi.rep.EnergyRequest;
-import it.unimi.simulators.Buffer;
-import it.unimi.simulators.PollutionSensor;
+import it.unimi.rep.EnergyRequestMapper;
 import it.unimi.simulators.Measurement;
+import it.unimi.simulators.PollutionSensor;
 
 import org.eclipse.paho.client.mqttv3.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import io.grpc.*;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ThermalPowerPlant {
 
-    private final String id;
-    private final ThermalPlantState plantState;
-    private final static String adminServerHost = "localhost";
-    private final int adminServerPort;
+    private static final Logger logger =
+            LoggerFactory.getLogger(ThermalPowerPlant.class);
+
+    private final int id;
+    private final int portNumber;
+    private final ThermalPlantState plantState = new ThermalPlantState();
 
     private RestClient restClient;
     private PollutionSensor sensor;
     private MqttClient mqttClient;
-    private Buffer buffer;
+
     private final List<AverageMeasurement> averages = new ArrayList<>();
+    private List<Plant> otherPlants;
+    private final Map<Integer, PlantCoordinationServiceGrpc.PlantCoordinationServiceBlockingStub> stubs =
+            new HashMap<>();
 
     private volatile boolean stopFlag = false;
 
-
-    public ThermalPowerPlant(String id, int adminServerPort) {
+    public ThermalPowerPlant(int id) {
         this.id = id;
-        this.adminServerPort = adminServerPort;
-        plantState = new ThermalPlantState();
+        this.portNumber = 50051 + id;
     }
 
-    public void start(Buffer buffer) throws Exception {
-        SlidingWindowBuffer slidingBuffer = new SlidingWindowBuffer();
-        this.buffer = slidingBuffer;
+    public void start() throws Exception {
+        logger.info("Starting ThermalPowerPlant {}", id);
 
-        System.out.println("Avvio ThermalPlant " + id);
+        SlidingWindowBuffer buffer = new SlidingWindowBuffer();
+        restClient = new RestClient("localhost", 8080);
 
-        // 1. Connessione al server REST
-        restClient = new RestClient(adminServerHost, adminServerPort);
-        Plant plant = new Plant(id, 1);
-        List<Plant> otherPlants = restClient.addPlantAndGetNetwork(plant);
-        System.out.println("Plants nel network: " + otherPlants);
+        Plant plant = new Plant(id, portNumber);
+        otherPlants = restClient.addPlantAndGetNetwork(plant);
 
-        // 2. Avvio sensore
+        startGRPCServer();
+        startGRPCClient();
+
         sensor = new PollutionSensor(buffer);
         sensor.start();
-        System.out.println("PollutionSensor avviato.");
+        logger.info("Pollution sensor started");
 
-        // 3. Thread per inviare periodicamente dati generati dal pollution sensor al server REST per simulare produzione CO2 conseguente alla produzione di energia
-        Thread publisherThread = new Thread(() -> {
+        startWindowConsumer(buffer);
+        startPublisherThread();
+        connectMQTT();
+    }
+
+    private void connectMQTT() throws MqttException {
+        mqttClient = new MqttClient("tcp://localhost:1883", "TPP-" + id);
+        mqttClient.connect();
+
+        mqttClient.subscribe("energy/requests", (topic, message) -> {
+            EnergyRequest req =
+                    EnergyRequestMapper.deserialize(new String(message.getPayload()));
+            logger.debug("Energy request received {}", req);
+            handleEnergyRequest(req);
+        });
+
+        logger.info("Connected to MQTT broker");
+    }
+
+    private void handleEnergyRequest(EnergyRequest request) {
+        if (plantState.tryAcquire(request.getTimestamp())) {
+            logger.info("Accepted energy request {}", request);
+            new Thread(() -> produceEnergy(request)).start();
+        } else {
+            logger.warn("Plant busy, request ignored {}", request);
+        }
+    }
+
+    private void produceEnergy(EnergyRequest request) {
+        try {
+            Thread.sleep(request.getAmount() * 10L);
+            logger.info("Energy production completed: {} kWh", request.getAmount());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.error("Energy production interrupted", e);
+        } finally {
+            plantState.release(request.getTimestamp());
+        }
+    }
+
+    private void startPublisherThread() {
+        new Thread(() -> {
             while (!stopFlag) {
                 try {
-                    List<AverageMeasurement> toSend = new ArrayList<>(averages);
+                    List<AverageMeasurement> snapshot = new ArrayList<>(averages);
                     averages.clear();
 
-                    for (AverageMeasurement avg : toSend) {
+                    for (AverageMeasurement avg : snapshot) {
                         restClient.addPollutionRecord(
-                                new PollutionRecord(avg.getPlantId(), avg.getValue(), Instant.ofEpochMilli(avg.getTimestamp()))
+                                new PollutionRecord(
+                                        avg.getPlantId(),
+                                        avg.getValue(),
+                                        Instant.ofEpochMilli(avg.getTimestamp())
+                                )
                         );
                     }
 
                     Thread.sleep(2000);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Error publishing pollution data", e);
                 }
             }
-        });
-        publisherThread.start();
+        }).start();
+    }
 
-        //thread consumatore con sliding window
-        Thread windowConsumer = new Thread(() -> {
+    private void startWindowConsumer(SlidingWindowBuffer buffer) {
+        new Thread(() -> {
             while (!stopFlag) {
-                List<Measurement> window = slidingBuffer.extractWindowIfAvailable();
+                List<Measurement> window = buffer.extractWindowIfAvailable();
                 if (window != null) {
-                    AverageMeasurement avg = AverageMeasurement.from(window, id);
-                    averages.add(avg);
+                    averages.add(AverageMeasurement.from(window, id));
                 }
             }
-        });
-        windowConsumer.start();
-
-
-        // 4. Connessione MQTT
-        String brokerUrl = "tcp://localhost:1883";
-        mqttClient = new MqttClient(brokerUrl, "ThermalPlant-" + id);
-        MqttConnectOptions options = new MqttConnectOptions();
-        options.setAutomaticReconnect(true);
-        options.setCleanSession(true);
-        mqttClient.connect(options);
-
-        mqttClient.subscribe("energy/requests", (topic, message) -> {   //è un thread concorrente a tutti gli effetti
-            String payload = new String(message.getPayload());
-            System.out.println("Ricevuta richiesta energia: " + payload);
-            handleEnergyRequest(payload);
-        });
-
-        System.out.println("ThermalPlant " + id + " avviata correttamente.");
+        }).start();
     }
 
-    private void handleEnergyRequest(String payload) {
-        try {
-            // Parse del formato: EnergyRequest{timestamp=1766942093069, amount=14025kWh}
-            int timestampStart = payload.indexOf("timestamp=") + 10;
-            int timestampEnd = payload.indexOf(",", timestampStart);
-            long timestamp = Long.parseLong(payload.substring(timestampStart, timestampEnd));
+    private void startGRPCServer() throws Exception {
+        Server server = ServerBuilder.forPort(portNumber)
+                .addService(new PlantCoordinationServiceImpl())
+                .build()
+                .start();
 
-            int amountStart = payload.indexOf("amount=") + 7;
-            int amountEnd = payload.indexOf("kWh", amountStart);
-            int amount = Integer.parseInt(payload.substring(amountStart, amountEnd));
-
-            EnergyRequest request = new EnergyRequest(timestamp, amount);
-
-            // Prova ad acquisire la risorsa
-            if (plantState.tryAcquire(request.getTimestamp())) {
-                // Avvia thread di produzione energia
-                Thread productionThread = new Thread(() -> produceEnergy(request));
-                productionThread.start();
-            } else {
-                System.out.println("Plant " + id + " è BUSY, richiesta ignorata: " + request);
-            }
-        } catch (Exception e) {
-            System.err.println("Formato richiesta non valido: " + payload);
-            e.printStackTrace();
-        }
+        logger.info("gRPC server started on port {}", portNumber);
     }
 
-    private void produceEnergy(EnergyRequest request) {
-        System.out.println("Plant " + id + " inizia produzione per " + request);
+    private void startGRPCClient() {
+        for (Plant p : otherPlants) {
+            if (p.getId() == id) continue;
 
-        try {
-            // Simula tempo di produzione: 1 secondo per kWh
-            int productionTimeMs = request.getAmount() * 10;
-            Thread.sleep(productionTimeMs);
+            ManagedChannel channel =
+                    ManagedChannelBuilder.forAddress("localhost", p.getPort())
+                            .usePlaintext()
+                            .build();
 
-            System.out.println("Plant " + id + " ha completato produzione di " +
-                             request.getAmount() + " kWh (requestId: " + request.getTimestamp() + ")");
+            stubs.put(
+                    p.getId(),
+                    PlantCoordinationServiceGrpc.newBlockingStub(channel)
+            );
 
-        } catch (InterruptedException e) {
-            System.err.println("Produzione interrotta per " + request);
-            Thread.currentThread().interrupt();
-        } finally {
-            // Rilascia la risorsa
-            plantState.release(request.getTimestamp());
+            logger.info("gRPC client connected to plant {}", p.getId());
         }
     }
 
     public void stopPlant() {
-        System.out.println("Arresto ThermalPlant " + id);
+        logger.info("Stopping ThermalPowerPlant {}", id);
         stopFlag = true;
-        if (sensor != null) sensor.stopMeGently();
-        try {
-            if (mqttClient != null && mqttClient.isConnected()) mqttClient.disconnect();
-        } catch (MqttException e) {
-            e.printStackTrace();
+
+        if (sensor != null) {
+            sensor.stopMeGently();
         }
-        System.out.println("ThermalPlant " + id + " fermata.");
+
+        try {
+            if (mqttClient != null && mqttClient.isConnected()) {
+                mqttClient.disconnect();
+            }
+        } catch (MqttException e) {
+            logger.error("Error during MQTT disconnect", e);
+        }
+
+        logger.info("ThermalPowerPlant {} stopped", id);
+    }
+
+    private static int insertID() {
+        try {
+            BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(System.in));
+            int id;
+
+            do {
+                System.out.print("Enter plant ID (>0): ");
+                id = Integer.parseInt(reader.readLine());
+            } while (id <= 0);
+
+            return id;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid plant ID", e);
+        }
     }
 
     public static void main(String[] args) {
         try {
-            SlidingWindowBuffer buffer = new SlidingWindowBuffer();
-            ThermalPowerPlant plant = new ThermalPowerPlant("TP1", 8080);
-            plant.start(buffer);
-            Thread.sleep(120000);
+            int id = insertID();
+            ThermalPowerPlant plant = new ThermalPowerPlant(id);
+            plant.start();
+
+            Thread.sleep(120_000);
             plant.stopPlant();
+
         } catch (Exception e) {
-            e.printStackTrace();
+            LoggerFactory.getLogger(ThermalPowerPlant.class)
+                    .error("Fatal error in ThermalPowerPlant main", e);
         }
     }
 }

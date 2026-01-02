@@ -21,10 +21,10 @@ public class PollutionStorage {
         return new ArrayList<>(records);
     }
 
-    public synchronized List<PollutionRecord> getByPlant(String plantId) {
+    public synchronized List<PollutionRecord> getByPlant(int plantId) {
         List<PollutionRecord> result = new ArrayList<>();
         for (PollutionRecord rec : records) {
-            if (rec.getPlantId().equals(plantId)) {
+            if (rec.getPlantId() == plantId) {
                 result.add(rec);
             }
         }

@@ -20,7 +20,7 @@ public class PollutionController {
     }
 
     @GetMapping("/{plantId}")
-    public List<PollutionRecord> getByPlant(@PathVariable String plantId) {
+    public List<PollutionRecord> getByPlant(@PathVariable int plantId) {
         return storage.getByPlant(plantId);
     }
 

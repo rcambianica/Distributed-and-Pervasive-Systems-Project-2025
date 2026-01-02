@@ -24,7 +24,7 @@ public class PlantStorage {
         lock.lock();
         try {
             for (Plant p : plants) {
-                if (p.getId().equals(plant.getId())) {
+                if (p.getId()==plant.getId()) {
                     return false;
                 }
             }
@@ -35,10 +35,10 @@ public class PlantStorage {
         }
     }
 
-    public boolean removePlant(String id) throws InterruptedException {
+    public boolean removePlant(int id) throws InterruptedException {
         lock.lock();
         try {
-            return plants.removeIf(p -> p.getId().equals(id));
+            return plants.removeIf(p -> p.getId()==id);
         } finally {
             lock.unlock();
         }
