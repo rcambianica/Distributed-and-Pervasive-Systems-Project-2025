@@ -28,12 +28,37 @@
         </encoder>
     </appender>
 
+    <!-- Tutti i log delle tue classi -->
+    <logger name="it.unimi" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
     <logger name="it.unimi.adminserver" level="INFO" additivity="false">
         <appender-ref ref="SERVER"/>
+        <appender-ref ref="CONSOLE"/>
     </logger>
 
     <logger name="it.unimi.simulators" level="DEBUG" additivity="false">
         <appender-ref ref="SIMULATOR"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Log del server REST Spring / Spring Boot -->
+    <logger name="org.springframework" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Log web/servlet dispatcher e mapping (utili per richieste REST) -->
+    <logger name="org.springframework.web" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Log del container embedded (Tomcat) -->
+    <logger name="org.apache.catalina" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="org.apache.tomcat" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE"/>
     </logger>
 
     <root level="WARN">

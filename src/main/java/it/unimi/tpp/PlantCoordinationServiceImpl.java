@@ -8,27 +8,24 @@ import it.unimi.grpc.PlantCoordinationServiceOuterClass.*;
 public class PlantCoordinationServiceImpl
         extends PlantCoordinationServiceGrpc.PlantCoordinationServiceImplBase {
 
-    @Override
-    public void sendIdAndPort(TPPIdentity sender, StreamObserver<Ack> responseObserver) {
+    private final int plantId;
+    private final ThermalPlantState plantState;
 
-        Ack reply = Ack.newBuilder()
-                .setContent("Presentation received")
-                .build();
-
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
+    public PlantCoordinationServiceImpl(int plantId, ThermalPlantState plantState) {
+        this.plantId = plantId;
+        this.plantState = plantState;
     }
 
     @Override
     public void checkAvailability(AvailabilityRequest request,
                                   StreamObserver<AvailabilityResponse> responseObserver) {
+        PlantStatus status =
+                plantState.isBusy()
+                        ? PlantStatus.BUSY
+                        : PlantStatus.IDLE;
         try {
-            // da sistemare
-            int localPlantId = 0;
-            PlantStatus status = PlantStatus.IDLE;
-
             AvailabilityResponse response = AvailabilityResponse.newBuilder()
-                    .setResponderPlantId(localPlantId)
+                    .setResponderPlantId(plantId)
                     .setRequestId(request.getRequestId())
                     .setStatus(status)
                     .build();

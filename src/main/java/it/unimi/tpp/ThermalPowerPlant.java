@@ -4,6 +4,7 @@ import it.unimi.adminclient.RestClient;
 import it.unimi.adminserver.model.Plant;
 import it.unimi.adminserver.model.PollutionRecord;
 import it.unimi.grpc.PlantCoordinationServiceGrpc;
+import it.unimi.grpc.PlantCoordinationServiceGrpc.*;
 import it.unimi.grpc.PlantCoordinationServiceOuterClass.*;
 import it.unimi.rep.EnergyRequest;
 import it.unimi.rep.EnergyRequestMapper;
@@ -36,7 +37,7 @@ public class ThermalPowerPlant {
 
     private final List<AverageMeasurement> averages = new ArrayList<>();
     private List<Plant> otherPlants;
-    private final Map<Integer, PlantCoordinationServiceGrpc.PlantCoordinationServiceBlockingStub> stubs =
+    private final Map<Integer, PlantCoordinationServiceBlockingStub> stubs =
             new HashMap<>();
 
     private volatile boolean stopFlag = false;
@@ -54,7 +55,6 @@ public class ThermalPowerPlant {
 
         Plant plant = new Plant(id, portNumber);
         otherPlants = restClient.addPlantAndGetNetwork(plant);
-
         startGRPCServer();
         startGRPCClient();
 
@@ -82,6 +82,16 @@ public class ThermalPowerPlant {
     }
 
     private void handleEnergyRequest(EnergyRequest request) {
+        for (PlantCoordinationServiceBlockingStub stub : stubs.values()) {
+            AvailabilityResponse resp =
+                    stub.checkAvailability(
+                            AvailabilityRequest.newBuilder()
+                                    .setRequestId(request.getTimestamp())
+                                    .build()
+                    );
+
+            logger.debug(resp.toString());
+        }
         if (plantState.tryAcquire(request.getTimestamp())) {
             logger.info("Accepted energy request {}", request);
             new Thread(() -> produceEnergy(request)).start();
@@ -140,7 +150,7 @@ public class ThermalPowerPlant {
 
     private void startGRPCServer() throws Exception {
         Server server = ServerBuilder.forPort(portNumber)
-                .addService(new PlantCoordinationServiceImpl())
+                .addService(new PlantCoordinationServiceImpl(this.id,this.plantState))
                 .build()
                 .start();
 
