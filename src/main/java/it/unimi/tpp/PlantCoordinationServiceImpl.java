@@ -1,73 +1,78 @@
 package it.unimi.tpp;
 
-
 import io.grpc.stub.StreamObserver;
 import it.unimi.grpc.PlantCoordinationServiceGrpc;
-import it.unimi.grpc.PlantCoordinationServiceOuterClass.*;
+import it.unimi.grpc.PlantCoordinationServiceOuterClass.ElectionMessage;
+import it.unimi.grpc.PlantCoordinationServiceOuterClass.ElectedMessage;
+import it.unimi.grpc.PlantCoordinationServiceOuterClass.Empty;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Implementazione gRPC minimale.
+ * Non contiene logica di elezione.
+ * Delegazione totale al ThermalPowerPlant.
+ */
 public class PlantCoordinationServiceImpl
         extends PlantCoordinationServiceGrpc.PlantCoordinationServiceImplBase {
 
     private static final Logger logger =
             LoggerFactory.getLogger(PlantCoordinationServiceImpl.class);
 
-    private final ThermalPowerPlant tpp;
+    private final ThermalPowerPlant plant;
 
-    public PlantCoordinationServiceImpl(ThermalPowerPlant tpp) {
-        this.tpp = tpp;
+    public PlantCoordinationServiceImpl(ThermalPowerPlant plant) {
+        this.plant = plant;
     }
 
     /**
-     * Ricezione messaggio di election (Chang & Roberts).
-     * La reazione NON è una risposta RPC, ma una decisione locale
-     * che può portare all'invio di un nuovo messaggio verso il successore.
+     * Ricezione messaggio <ELECTION, requestId, candidateId, bid>
+     * Forward-only: la decisione è interamente locale al plant.
      */
     @Override
     public void election(ElectionMessage request,
                          StreamObserver<Empty> responseObserver) {
 
         logger.debug(
-                "[RPC-ELECTION-RECEIVED] plant={} request={} cand={} bid={}",
-                tpp.getId(),
+                "[RPC] ELECTION received: request={} cand={} bid={}",
                 request.getRequestId(),
                 request.getCandidateId(),
                 request.getBid()
         );
 
-        tpp.onElectionMessage(request);
-
-        responseObserver.onNext(Empty.getDefaultInstance());
-        responseObserver.onCompleted();
-    }
-
-    @Override
-    public void leaderElected(WinnerMessage request,
-                              StreamObserver<Empty> responseObserver) {
-
-        tpp.onLeaderElected(request.getRequestId(), request.getWinnerId());
+        plant.onElectionMessage(
+                request.getRequestId(),
+                request.getCandidateId(),
+                request.getBid()
+        );
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
     }
 
     /**
-     * Notifica di uscita di un altro plant dalla rete.
-     * Aggiornamento immediato della vista di rete locale.
+     * Ricezione messaggio <ELECTED, requestId, winnerId>
+     * Serve solo a propagare il vincitore e terminare l’elezione.
      */
     @Override
-    public void notifyExit(ExitNotification request,
-                           StreamObserver<Empty> responseObserver) {
+    public void elected(ElectedMessage request,
+                        StreamObserver<Empty> responseObserver) {
 
-        logger.info(
-                "[RPC-EXIT-RECEIVED] plant={} exited",
-                request.getPlantId()
+        logger.debug(
+                "[RPC] ELECTED received: request={} winner={}",
+                request.getRequestId(),
+                request.getWinnerId()
         );
 
-        tpp.handleRemoteExit(request.getPlantId());
+        plant.onElected(
+                request.getRequestId(),
+                request.getWinnerId()
+        );
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
     }
+
 }
+

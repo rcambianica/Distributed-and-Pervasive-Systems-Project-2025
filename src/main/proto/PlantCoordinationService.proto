@@ -1,21 +1,6 @@
 syntax = "proto3";
 package it.unimi.grpc;
 
-enum PlantStatus {
-  IDLE = 0;
-  BUSY = 1;
-}
-
-message AvailabilityRequest {
-  int32 senderPlantId = 1;
-  int64 requestId = 2;
-}
-
-message AvailabilityResponse  {
-  int32 responderPlantId = 1;
-  int64 requestId = 2;
-  PlantStatus status = 3;
-}
 
 message ElectionMessage {
   int64 requestId = 1;
@@ -23,20 +8,19 @@ message ElectionMessage {
   float bid = 3;
 }
 
-message WinnerMessage {
+message ElectedMessage {
   int64 requestId = 1;
   int32 winnerId = 2;
 }
+
+message Empty {}
 
 message ExitNotification  {
   int32 plantId = 1;
 }
 
-message Empty {}
-
 service PlantCoordinationService  {
-  rpc checkAvailability(AvailabilityRequest) returns (AvailabilityResponse);
   rpc election(ElectionMessage) returns (Empty);
-  rpc leaderElected(WinnerMessage) returns (Empty);
+  rpc elected(ElectedMessage) returns (Empty);
   rpc notifyExit(ExitNotification) returns (Empty);
 }

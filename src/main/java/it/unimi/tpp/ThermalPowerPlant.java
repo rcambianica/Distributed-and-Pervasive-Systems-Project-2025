@@ -366,7 +366,7 @@ public class ThermalPowerPlant {
 
                     MqttMessage msg =
                             new MqttMessage(payload.getBytes());
-                    msg.setQos(1);
+                    msg.setQos(0);
                     msg.setRetained(false);
 
                     safePublish(POLLUTION_TOPIC, msg);
@@ -412,45 +412,32 @@ public class ThermalPowerPlant {
         logger.info("Connected to MQTT broker");
     }
 
-    private void clearEnergyRequestFromTopic() {
-        try {
-            MqttMessage msg = new MqttMessage(new byte[0]) {{
-                setQos(1);
-                setRetained(true);
-            }};
-            safePublish(ER_TOPIC, msg);
-
-            logger.info("[MQTT] Cleared energy request from topic");
-
-        } catch (Exception e) {
-            logger.error("Failed to clear MQTT energy request", e);
-        }
-    }
-
     private void startElection(EnergyRequest req) {
 
         long requestId = req.getTimestamp();
-        ElectionContext ctx;
 
         try {
             electionLock.lock();
             try {
+                // Elezione già avviata localmente
                 if (electionContexts.containsKey(requestId)) {
                     return;
                 }
 
+                // Se BUSY: non partecipo all’elezione
+                if (plantState.isBusy()) {
+                    electionContexts.put(
+                            requestId,
+                            new ElectionContext(requestId, Float.MAX_VALUE)
+                    );
+                    return;
+                }
+
+                // Sono IDLE → genero bid e partecipo
                 float myBid = generateBid();
-                ctx = new ElectionContext(requestId, myBid);
+                ElectionContext ctx = new ElectionContext(requestId, myBid);
                 ctx.setParticipant(true);
-                ctx.setBestBid(myBid);
-                ctx.setBestCandidateId(this.id);
-
                 electionContexts.put(requestId, ctx);
-
-                logger.info(
-                        "[ELECTION-START] plant={} request={} bid={}",
-                        id, requestId, myBid
-                );
 
             } finally {
                 electionLock.unlock();
@@ -461,231 +448,150 @@ public class ThermalPowerPlant {
         }
 
         int successorId = retrieveSuccessorId();
-        // solo una plant → vittoria immediata
-        if (successorId == this.id) {
-            startLeaderElectedPhase(requestId, this.id);
+        PlantCoordinationServiceBlockingStub stub = stubs.get(successorId);
+        if (stub == null) {
             return;
         }
 
         ElectionMessage msg = ElectionMessage.newBuilder()
                 .setRequestId(requestId)
-                .setCandidateId(this.id)
-                .setBid(ctx.getMyBid())
+                .setCandidateId(id)
+                .setBid(electionContexts.get(requestId).getMyBid())
                 .build();
 
-        try {
-            PlantCoordinationServiceBlockingStub stub = stubs.get(successorId);
-            if (stub == null) {
-                restartElection(requestId);
-                return;
-            }
-            stub.election(msg);
-        } catch (Exception e) {
-            restartElection(requestId);
-        }
+        stub.election(msg);
     }
 
-    public void onElectionMessage(ElectionMessage msg) {
 
-        long requestId = msg.getRequestId();
-        int incomingCandidate = msg.getCandidateId();
-        float incomingBid = msg.getBid();
-
-        ElectionContext ctx;
-        boolean iAmLeader = false;
-        int forwardCandidate;
-        float forwardBid;
-
-        try {
-            electionLock.lock();
-            try {
-                ctx = electionContexts.get(requestId);
-                if (ctx == null || ctx.isCompleted()) {
-                    return;
-                }
-
-                // ritorno del mio ID → sono il leader
-                if (incomingCandidate == this.id) {
-                    ctx.setCompleted(true);
-                    iAmLeader = true;
-                    logger.info(
-                            "[ELECTION-WIN] plant={} request={} bid={}",
-                            id, requestId, ctx.getBestBid()
-                    );
-                } else {
-                    boolean better =
-                            incomingBid < ctx.getBestBid() ||
-                                    (incomingBid == ctx.getBestBid()
-                                            && incomingCandidate > ctx.getBestCandidateId());
-
-                    if (better) {
-                        ctx.setBestBid(incomingBid);
-                        ctx.setBestCandidateId(incomingCandidate);
-                    }
-
-                    ctx.setParticipant(true);
-                }
-
-                forwardCandidate = ctx.getBestCandidateId();
-                forwardBid = ctx.getBestBid();
-
-            } finally {
-                electionLock.unlock();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return;
-        }
-
-        if (iAmLeader) {
-            startLeaderElectedPhase(requestId, this.id);
+    public synchronized void onElectionMessage(
+            long requestId,
+            int candidateId,
+            float candidateBid
+    ) {
+        ElectionContext ctx = electionContexts.get(requestId);
+        if (ctx == null) {
             return;
         }
 
         int successorId = retrieveSuccessorId();
-
-        ElectionMessage forward = ElectionMessage.newBuilder()
-                .setRequestId(requestId)
-                .setCandidateId(forwardCandidate)
-                .setBid(forwardBid)
-                .build();
-
-        try {
-            PlantCoordinationServiceBlockingStub stub = stubs.get(successorId);
-            if (stub == null) {
-                restartElection(requestId);
-                return;
-            }
-            stub.election(forward);
-        } catch (Exception e) {
-            restartElection(requestId);
+        PlantCoordinationServiceBlockingStub stub = stubs.get(successorId);
+        if (stub == null) {
+            return; // rete non pronta, fuori specifica ma safe
         }
-    }
 
-    private void startLeaderElectedPhase(long requestId, int leaderId) {
+        // Caso 1: il mio messaggio ha fatto il giro → vinco
+        if (candidateId == id) {
+            ctx.setParticipant(false);
 
-        int successorId = retrieveSuccessorId();
-        if (successorId == this.id) {
-            // solo nodo → fine immediata
-            handleElectionWin(requestId);
+            ElectedMessage msg = ElectedMessage.newBuilder()
+                    .setRequestId(requestId)
+                    .setWinnerId(id)
+                    .build();
+
+            stub.elected(msg);
             return;
         }
 
-        WinnerMessage msg = WinnerMessage.newBuilder()
-                .setRequestId(requestId)
-                .setWinnerId(leaderId)
-                .build();
-
-        try {
-            stubs.get(successorId).leaderElected(msg);
-        } catch (Exception e) {
-            restartElection(requestId);
-        }
-    }
-
-    public void onLeaderElected(long requestId, int winnerId) {
-
-        boolean finalReturn = false;
-
-        try {
-            electionLock.lock();
-            try {
-                ElectionContext ctx = electionContexts.get(requestId);
-                if (ctx == null) return;
-
-                if (winnerId == this.id && ctx.isParticipant()) {
-                    electionContexts.remove(requestId);
-                    finalReturn = true;
-                } else {
-                    ctx.setCompleted(true);
-                }
-            } finally {
-                electionLock.unlock();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        // Caso 2: BUSY → non competo
+        if (plantState.isBusy()) {
+            forwardElection(stub, requestId, candidateId, candidateBid);
             return;
         }
 
-        if (!finalReturn) {
+        float myBid = ctx.getMyBid();
+
+        boolean receivedIsBetter =
+                candidateBid < myBid ||
+                        (candidateBid == myBid && candidateId > id);
+
+        // Caso 3a: candidato ricevuto migliore
+        if (receivedIsBetter) {
+            ctx.setParticipant(true);
+            forwardElection(stub, requestId, candidateId, candidateBid);
+            return;
+        }
+
+        // Caso 3b: il mio candidato è migliore
+        if (!ctx.isParticipant()) {
+            ctx.setParticipant(true);
+            forwardElection(stub, requestId, id, myBid);
+        }
+        // se participant → estinzione messaggio
+    }
+
+
+    private void forwardElection(PlantCoordinationServiceBlockingStub stub, long requestId, int candidateId, float bid) {
+        ElectionMessage msg = ElectionMessage.newBuilder()
+                .setRequestId(requestId)
+                .setCandidateId(candidateId)
+                .setBid(bid)
+                .build();
+
+        stub.election(msg);
+    }
+
+    public synchronized void onElected(long requestId, int winnerId) {
+
+        ElectionContext ctx = electionContexts.remove(requestId);
+        if (ctx == null) {
+            return;
+        }
+
+        ctx.setParticipant(false);
+
+        if (winnerId != id) {
             int successorId = retrieveSuccessorId();
-            if (successorId != this.id) {
-                WinnerMessage msg = WinnerMessage.newBuilder()
+            PlantCoordinationServiceBlockingStub stub = stubs.get(successorId);
+            if (stub != null) {
+                ElectedMessage msg = ElectedMessage.newBuilder()
                         .setRequestId(requestId)
                         .setWinnerId(winnerId)
                         .build();
-                try {
-                    stubs.get(successorId).leaderElected(msg);
-                } catch (Exception ignored) {}
+                stub.elected(msg);
             }
             return;
         }
 
-        // SOLO ORA il leader produce
-        handleElectionWin(requestId);
+        // Sono il vincitore
+        handleWin(requestId);
     }
 
-    /**
-     * Handles election win; attempts atomic production commit
-     */
-    public void handleElectionWin(long requestId) {
-
-        EnergyRequest request = pendingRequests.get(requestId);
-        if (request == null) return;
-
-        if (!plantState.tryAcquire(requestId)) {
-            restartElection(requestId);
-            return;
-        }
-        logger.info("[ELECTION-COMMIT] plant={} request={}", id, requestId);
-
-        clearEnergyRequestFromTopic();
-        pendingRequests.remove(requestId);
-
-        new Thread(() -> produceEnergy(request)).start();
-    }
-
-    /**
-     * Used when a new plant joins the network during an election process
-     * **/
-    private void restartElection(long requestId) {
-
-        EnergyRequest req;
-
+    private void cancelEnergyRequest() {
         try {
-            electionLock.lock();
-            try {
-                ElectionContext old = electionContexts.remove(requestId);
-                if (old != null) {
-                    logger.warn(
-                            "[ELECTION-RESTART] cleaning context for request {}",
-                            requestId
-                    );
-                }
-            } finally {
-                electionLock.unlock();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            MqttMessage empty = new MqttMessage(new byte[0]);
+            empty.setQos(1);
+            empty.setRetained(true);
+
+            mqttClient.publish("energy/requests", empty);
+        } catch (Exception e) {
+            logger.error("Failed to cancel retained energy request", e);
+        }
+    }
+
+    private void handleWin(long requestId) {
+
+        EnergyRequest req = pendingRequests.remove(requestId);
+        if (req == null) {
             return;
         }
 
-        req = pendingRequests.get(requestId);
-        if (req == null) {
-            logger.warn(
-                    "[ELECTION-RESTART-IGNORED] request {} no longer pending",
-                    requestId
-            );
+        // Tentativo atomico di acquisizione
+        if (!plantState.tryAcquire(requestId)) {
             return;
         }
 
         logger.info(
-                "[ELECTION-RESTART] plant={} request={}",
-                id, requestId
+                "[ELECTION-WIN] plant={} request={} bid={}",
+                id,
+                requestId,
+                electionContexts.get(requestId) != null
+                        ? electionContexts.get(requestId).getMyBid()
+                        : "N/A"
         );
-
-        startElection(req);
+        cancelEnergyRequest();
+        produceEnergy(req);
     }
+
 
     public void start() throws Exception {
         logger.info("Starting ThermalPowerPlant {}", id);
@@ -788,12 +694,11 @@ public class ThermalPowerPlant {
             ThermalPowerPlant plant = new ThermalPowerPlant(id);
 
             plant.start();
-            Thread.sleep(60000);
-            plant.stop();
+            Thread.sleep(30000);
+
 
         } catch (Exception e) {
-            LoggerFactory.getLogger(ThermalPowerPlant.class)
-                    .error("Fatal error in ThermalPowerPlant main", e);
+            logger.error("Fatal error in ThermalPowerPlant main", e);
         }
     }
 }
