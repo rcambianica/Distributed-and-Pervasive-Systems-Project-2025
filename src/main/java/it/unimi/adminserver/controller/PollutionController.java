@@ -1,6 +1,6 @@
 package it.unimi.adminserver.controller;
 
-import it.unimi.adminserver.model.PollutionRecord;
+import it.unimi.adminserver.model.Pollution;
 import it.unimi.adminserver.storage.PollutionStorage;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -15,19 +15,13 @@ public class PollutionController {
     private final PollutionStorage storage = PollutionStorage.getInstance();
 
     @GetMapping
-    public List<PollutionRecord> getAll() {
+    public List<Pollution> getAll() {
         return storage.getAll();
     }
 
     @GetMapping("/{plantId}")
-    public List<PollutionRecord> getByPlant(@PathVariable int plantId) {
+    public List<Pollution> getByPlant(@PathVariable int plantId) {
         return storage.getByPlant(plantId);
-    }
-
-    @PostMapping
-    public ResponseEntity<?> addRecord(@RequestBody PollutionRecord record) {
-        storage.addRecord(record);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     /**
@@ -39,7 +33,7 @@ public class PollutionController {
             @RequestParam long t1,
             @RequestParam long t2
     ) {
-        List<PollutionRecord> all = storage.getAll();
+        List<Pollution> all = storage.getAll();
 
         double avg = all.stream()
                 .filter(r -> {
@@ -47,7 +41,7 @@ public class PollutionController {
                     return !ts.isBefore(Instant.ofEpochMilli(t1)) &&
                             !ts.isAfter(Instant.ofEpochMilli(t2));
                 })
-                .mapToDouble(PollutionRecord::getValue)
+                .mapToDouble(Pollution::getValue)
                 .average()
                 .orElse(0.0);
 

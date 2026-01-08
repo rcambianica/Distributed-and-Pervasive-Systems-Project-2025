@@ -4,11 +4,14 @@ public class Plant {
     private int id;
     private static final String address = "localhost";
     private int port;
+    private long lastHeartbeat;
 
-    public Plant() {};
+    public Plant() {}
+
     public Plant(int id, int port) {
         setId(id);
         setPort(port);
+        this.lastHeartbeat = System.currentTimeMillis();
     }
 
     public int getId() { return id; }
@@ -26,11 +29,21 @@ public class Plant {
         this.port = port;
     }
 
+    public void heartbeat() {
+        this.lastHeartbeat = System.currentTimeMillis();
+    }
+
+    public long getLastHeartbeat() {
+        return lastHeartbeat;
+    }
+
     @Override
     public String toString() {
         return "Plant{" +
-                "id='" + id + '\'' +
+                "id=" + id +
+                ", address='" + address + '\'' +
                 ", port=" + port +
+                ", lastHeartbeat=" + lastHeartbeat +
                 '}';
     }
 }

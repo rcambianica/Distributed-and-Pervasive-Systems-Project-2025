@@ -15,7 +15,6 @@ public class ThermalPlantState {
         this.currentRequestId = null;
     }
 
-    // Tentativo atomico di acquisizione
     public synchronized boolean tryAcquire(Long requestId) {
         if (status == Status.IDLE) {
             status = Status.BUSY;
@@ -25,7 +24,6 @@ public class ThermalPlantState {
         return false;
     }
 
-    // Rilascio atomico
     public synchronized void release(Long requestId) {
         if (status == Status.BUSY && currentRequestId != null
                 && currentRequestId.equals(requestId)) {
@@ -34,12 +32,7 @@ public class ThermalPlantState {
         }
     }
 
-    // Lettura sicura (solo osservazione)
     public synchronized boolean isBusy() {
         return status == Status.BUSY;
-    }
-
-    public synchronized Long getCurrentRequestId() {
-        return currentRequestId;
     }
 }

@@ -17,6 +17,26 @@ message AvailabilityResponse  {
   PlantStatus status = 3;
 }
 
+message ElectionMessage {
+  int64 requestId = 1;
+  int32 candidateId = 2;
+  float bid = 3;
+}
+
+message WinnerMessage {
+  int64 requestId = 1;
+  int32 winnerId = 2;
+}
+
+message ExitNotification  {
+  int32 plantId = 1;
+}
+
+message Empty {}
+
 service PlantCoordinationService  {
   rpc checkAvailability(AvailabilityRequest) returns (AvailabilityResponse);
+  rpc election(ElectionMessage) returns (Empty);
+  rpc leaderElected(WinnerMessage) returns (Empty);
+  rpc notifyExit(ExitNotification) returns (Empty);
 }

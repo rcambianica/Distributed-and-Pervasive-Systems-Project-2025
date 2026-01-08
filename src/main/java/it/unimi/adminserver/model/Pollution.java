@@ -2,14 +2,14 @@ package it.unimi.adminserver.model;
 
 import java.time.Instant;
 
-public class PollutionRecord {
+public class Pollution {
     private int plantId;
     private double value;
     private Instant timestamp;
 
-    public PollutionRecord() {}
+    public Pollution() {}
 
-    public PollutionRecord(int plantId, double value, Instant timestamp) {
+    public Pollution(int plantId, double value, Instant timestamp) {
         this.plantId = plantId;
         this.value = value;
         this.timestamp = timestamp;

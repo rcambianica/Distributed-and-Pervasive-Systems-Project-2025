@@ -61,7 +61,7 @@ public class AdminClientApp {
 
     private static void listActivePlants(RestClient restClient) {
         System.out.println("\n--- Active Thermal Power Plants ---");
-        List<Plant> plants = restClient.getActivePlants();
+        List<Plant> plants = restClient.getNetwork();
 
         if (plants != null && !plants.isEmpty()) {
             plants.forEach(System.out::println);
@@ -79,9 +79,9 @@ public class AdminClientApp {
 
         try {
             System.out.print("Want to insert milliseconds manually? (s/n): ");
-            String risposta = scanner.nextLine();
+            String risp = scanner.nextLine();
 
-            if (risposta.equalsIgnoreCase("n")) {
+            if (risp.equalsIgnoreCase("n")) {
                 t1 = Instant.now().minusSeconds(3600).toEpochMilli();
                 t2 = Instant.now().toEpochMilli();
                 logger.debug("Using default time interval: last hour");

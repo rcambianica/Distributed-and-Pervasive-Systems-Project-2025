@@ -17,6 +17,7 @@ def grpcVersion = '1.75.0'
 def protobufVersion = '4.28.2'
 
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.3'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 

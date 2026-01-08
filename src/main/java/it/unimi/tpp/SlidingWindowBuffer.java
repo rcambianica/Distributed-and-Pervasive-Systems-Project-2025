@@ -19,7 +19,7 @@ public class SlidingWindowBuffer implements Buffer {
     @Override
     public synchronized void addMeasurement(Measurement m) {
         buffer.add(m);
-        logger.debug("Measurement added: {}", m);
+        //logger.debug("Measurement added: {}", m);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class SlidingWindowBuffer implements Buffer {
         List<Measurement> window = new ArrayList<>(buffer.subList(0, 8));
         buffer.subList(0, 4).clear();
 
-        logger.debug("Sliding window extracted");
+        //logger.debug("Sliding window extracted");
         return window;
     }
 }

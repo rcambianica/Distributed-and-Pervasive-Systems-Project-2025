@@ -1,11 +1,17 @@
 package it.unimi.adminserver.storage;
 
-import it.unimi.adminserver.model.PollutionRecord;
-import java.util.*;
+import it.unimi.adminserver.model.Pollution;
+import it.unimi.adminserver.sync.MyLock;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PollutionStorage {
+
     private static final PollutionStorage instance = new PollutionStorage();
-    private final List<PollutionRecord> records = new ArrayList<>();
+
+    private final List<Pollution> records = new ArrayList<>();
+    private final MyLock lock = new MyLock();
 
     private PollutionStorage() {}
 
@@ -13,21 +19,51 @@ public class PollutionStorage {
         return instance;
     }
 
-    public synchronized void addRecord(PollutionRecord rec) {
-        records.add(rec);
-    }
-
-    public synchronized List<PollutionRecord> getAll() {
-        return new ArrayList<>(records);
-    }
-
-    public synchronized List<PollutionRecord> getByPlant(int plantId) {
-        List<PollutionRecord> result = new ArrayList<>();
-        for (PollutionRecord rec : records) {
-            if (rec.getPlantId() == plantId) {
-                result.add(rec);
+    public void addRecord(Pollution rec) {
+        try {
+            lock.lock();
+            try {
+                records.add(rec);
+            } finally {
+                lock.unlock();
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
-        return result;
+    }
+
+    public List<Pollution> getAll() {
+        try {
+            lock.lock();
+            try {
+                return new ArrayList<>(records);
+            } finally {
+                lock.unlock();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return List.of();
+        }
+    }
+
+    public List<Pollution> getByPlant(int plantId) {
+        try {
+            lock.lock();
+            try {
+                List<Pollution> result = new ArrayList<>();
+                for (Pollution rec : records) {
+                    if (rec.getPlantId() == plantId) {
+                        result.add(rec);
+                    }
+                }
+                return result;
+            } finally {
+                lock.unlock();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return List.of();
+        }
     }
 }
+

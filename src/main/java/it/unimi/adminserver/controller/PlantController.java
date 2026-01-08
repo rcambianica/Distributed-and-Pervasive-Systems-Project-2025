@@ -11,7 +11,7 @@ import java.util.List;
 @RequestMapping("/plants")
 public class PlantController {
 
-    private final PlantStorage storage = new PlantStorage();
+    private final PlantStorage storage = PlantStorage.getInstance();
 
     @GetMapping
     public ResponseEntity<List<Plant>> getAllPlants() throws InterruptedException {
@@ -21,8 +21,6 @@ public class PlantController {
     @PostMapping
     public ResponseEntity<?> addPlant(@RequestBody Plant plant) throws InterruptedException {
         try {
-            // Validate incoming objects using model setters if not already invoked by constructor
-            // Some serializers may bypass constructor, so enforce here
             plant.setId(plant.getId());
             plant.setPort(plant.getPort());
         } catch (IllegalArgumentException e) {
@@ -42,5 +40,15 @@ public class PlantController {
             return ResponseEntity.status(404).body("Plant not found");
         }
         return ResponseEntity.ok("Removed plant " + id);
+    }
+
+    @PostMapping("/{id}/heartbeat")
+    public ResponseEntity<Void> heartbeat(@PathVariable int id) throws InterruptedException {
+        Plant p = PlantStorage.getInstance().get(id);
+        if (p != null) {
+            p.heartbeat();
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }

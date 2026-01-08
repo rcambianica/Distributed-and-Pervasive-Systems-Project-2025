@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 public class RenewableEnergyProvider {
 
     private static final String MQTT_BROKER = "tcp://localhost:1883";
-    private static final String TOPIC = "energy/requests";
+    public static final String ER_TOPIC = "energy/requests";
     private static final Logger logger =
             LoggerFactory.getLogger(RenewableEnergyProvider.class);
 
@@ -31,11 +31,14 @@ public class RenewableEnergyProvider {
                 try {
                     EnergyRequest req = generateRequest();
                     String payload = EnergyRequestMapper.serialize(req);
-                    client.publish(TOPIC, new MqttMessage(payload.getBytes()));
+                    MqttMessage msg = new MqttMessage(payload.getBytes());
+                    msg.setQos(1);
+                    msg.setRetained(true);
+                    client.publish(ER_TOPIC, msg);
                     logger.debug("Request published: {}", payload);
                     Thread.sleep(10000);    //10 sec interval
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Error publishing energy request", e);
                 }
             }
         });

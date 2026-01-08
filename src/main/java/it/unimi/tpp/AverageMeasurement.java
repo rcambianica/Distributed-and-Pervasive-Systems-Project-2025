@@ -21,7 +21,7 @@ public class AverageMeasurement {
         return timestamp;
     }
 
-    private AverageMeasurement(int plantId, double value, long timestamp) {
+    public AverageMeasurement(int plantId, double value, long timestamp) {
         this.plantId = plantId;
         this.value = value;
         this.timestamp = timestamp;

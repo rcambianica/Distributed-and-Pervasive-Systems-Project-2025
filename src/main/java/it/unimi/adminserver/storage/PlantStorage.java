@@ -7,14 +7,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PlantStorage {
+
+    private static final PlantStorage instance = new PlantStorage();
+
     private final List<Plant> plants = new ArrayList<>();
     private final MyLock lock = new MyLock();
+
+    private PlantStorage() {}
+
+    public static PlantStorage getInstance() {
+        return instance;
+    }
 
     public List<Plant> getAllPlants() throws InterruptedException {
         lock.lock();
         try {
-            // ritorna una copia per evitare che qualcuno modifichi la lista fuori dal lock
             return new ArrayList<>(plants);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public Plant get(int id) throws InterruptedException {
+        lock.lock();
+        try {
+            for (Plant p : plants) {
+                if (p.getId() == id) return p;
+            }
+            return null;
         } finally {
             lock.unlock();
         }
@@ -24,7 +44,7 @@ public class PlantStorage {
         lock.lock();
         try {
             for (Plant p : plants) {
-                if (p.getId()==plant.getId()) {
+                if (p.getId() == plant.getId()) {
                     return false;
                 }
             }
@@ -38,7 +58,7 @@ public class PlantStorage {
     public boolean removePlant(int id) throws InterruptedException {
         lock.lock();
         try {
-            return plants.removeIf(p -> p.getId()==id);
+            return plants.removeIf(p -> p.getId() == id);
         } finally {
             lock.unlock();
         }
