@@ -36,7 +36,7 @@ public class RenewableEnergyProvider {
                     msg.setRetained(true);
                     client.publish(ER_TOPIC, msg);
                     logger.debug("Request published: {}", payload);
-                    Thread.sleep(10000);    //10 sec interval
+                    Thread.sleep(10000);
                 } catch (Exception e) {
                     logger.error("Error publishing energy request", e);
                 }
@@ -46,7 +46,7 @@ public class RenewableEnergyProvider {
     }
 
     private EnergyRequest generateRequest() {
-        int amount = 5000 + rnd.nextInt(10001); // 5000-15000 range
+        int amount = rnd.nextInt(10001) + 5000;
         return new EnergyRequest(amount);
     }
 

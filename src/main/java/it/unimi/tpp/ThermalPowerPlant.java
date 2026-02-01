@@ -2,7 +2,6 @@ package it.unimi.tpp;
 
 import it.unimi.adminclient.RestClient;
 import it.unimi.adminserver.model.Plant;
-import it.unimi.adminserver.model.Pollution;
 import it.unimi.grpc.PlantCoordinationServiceGrpc;
 import it.unimi.grpc.PlantCoordinationServiceGrpc.*;
 import it.unimi.grpc.PlantCoordinationServiceOuterClass.*;
@@ -32,9 +31,10 @@ public class ThermalPowerPlant {
     private final ThermalPlantState plantState = new ThermalPlantState();
     private SlidingWindowBuffer buffer;
 
-    private final Map<Long,ElectionContext> electionContexts = new HashMap<>();
     private final MyLock electionLock = new MyLock();
-    private final Map<Long,EnergyRequest> pendingRequests = new HashMap<>();
+    private final Queue<EnergyRequest> pendingRequests = new LinkedList<>();
+    private final Map<Long,ElectionContext> electionContexts = new HashMap<>();
+    private final Set<Long> handledRequests = new HashSet<>();
 
     public static final String REST_SERVER_ADDRESS = "localhost";
     public static final int REST_SERVER_PORT = 8080;
@@ -42,7 +42,6 @@ public class ThermalPowerPlant {
     private static final String POLLUTION_TOPIC = "pollution/averages";
 
     private PollutionSensor sensor;
-    private final List<AverageMeasurement> averages = new ArrayList<>();
 
     private RestClient restClient;
 
@@ -61,11 +60,6 @@ public class ThermalPowerPlant {
         this.id = id;
         this.portNumber = 5000 + id;
     }
-
-    public int getId() {
-        return id;
-    }
-
 
     /**
      * Determines ID of the next plant to recreate a ring topology used by the Chang&Roberts algorithm.
@@ -137,21 +131,19 @@ public class ThermalPowerPlant {
     private void initializeNetwork(List<Plant> network) {
         try {
             networkLock.lock();
-            try {
+
                 knownPlants.clear();
                 for (Plant p : network) {
                     if (p.getId() != this.id) {
                         knownPlants.put(p.getId(), p);
                     }
-                }
+
                 logger.info("Initial network view: {}", knownPlants.keySet());
-            } finally {
-                networkLock.unlock();
-            }
+                }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.error("Interrupted during network initialization", e);
-        }
+        } finally {networkLock.unlock();}
     }
 
     /**
@@ -386,7 +378,7 @@ public class ThermalPowerPlant {
             while (!stopFlag) {
                 try {
                     restClient.sendHeartbeat(id);
-                    Thread.sleep(5_000);
+                    Thread.sleep(5000);
                 } catch (Exception e) {
                     logger.warn("Heartbeat failed", e);
                 }
@@ -394,131 +386,120 @@ public class ThermalPowerPlant {
         }).start();
     }
 
-    private void connectMQTT() throws MqttException {
+    private void connectMQTTSubscriberThread() throws MqttException {
         mqttClient = new MqttClient("tcp://localhost:1883", "TPP-" + id);
         mqttClient.connect();
 
-        mqttClient.subscribe("energy/requests", (topic, message) -> {
+        mqttClient.subscribe(ER_TOPIC, (topic, message) -> {
+
+            // retained clear
             if (message.getPayload().length == 0) {
-                return; // retained clear
+                return;
             }
+
             EnergyRequest req =
                     EnergyRequestMapper.deserialize(new String(message.getPayload()));
-            pendingRequests.put(req.getTimestamp(), req);
-            startElection(req);
-        });
 
+            synchronized (electionLock) {
+                pendingRequests.add(req);
+                electionLock.notifyAll();
+            }
+
+        });
 
         logger.info("Connected to MQTT broker");
     }
 
-    private void startElection(EnergyRequest req) {
+    private void startElectionThread() {
+        Thread t = new Thread(() -> {
+            while (!stopFlag) {
+                EnergyRequest req;
 
-        long requestId = req.getTimestamp();
+                synchronized (electionLock) {
+                    while (pendingRequests.isEmpty()) {
+                        try {
+                            electionLock.wait();
+                        } catch (InterruptedException e) {
+                            return;
+                        }
+                    }
 
-        try {
-            electionLock.lock();
-            try {
-                // Elezione già avviata localmente
-                if (electionContexts.containsKey(requestId)) {
-                    return;
+                    req = pendingRequests.poll();
                 }
 
-                // Se BUSY: non partecipo all’elezione
+                synchronized (this) {
+                    if (handledRequests.contains(req.getTimestamp())) {
+                        continue;
+                    }
+                }
+
                 if (plantState.isBusy()) {
-                    electionContexts.put(
-                            requestId,
-                            new ElectionContext(requestId, Float.MAX_VALUE)
+                    logger.info(
+                            "[ENERGY-REQUEST] plant={} BUSY → request {} discarded",
+                            id, req.getTimestamp()
                     );
-                    return;
+                    continue;
                 }
 
-                // Sono IDLE → genero bid e partecipo
-                float myBid = generateBid();
-                ElectionContext ctx = new ElectionContext(requestId, myBid);
-                ctx.setParticipant(true);
-                electionContexts.put(requestId, ctx);
+                boolean shouldStart = false;
+                synchronized (this) {
+                    if (!handledRequests.contains(req.getTimestamp())
+                            && !electionContexts.containsKey(req.getTimestamp())) {
+                        shouldStart = true;
+                    }
+                }
 
-            } finally {
-                electionLock.unlock();
+                if (shouldStart) {
+                    startElection(req);
+                }
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return;
-        }
+        });
 
-        int successorId = retrieveSuccessorId();
-        PlantCoordinationServiceBlockingStub stub = stubs.get(successorId);
-        if (stub == null) {
-            return;
-        }
-
-        ElectionMessage msg = ElectionMessage.newBuilder()
-                .setRequestId(requestId)
-                .setCandidateId(id)
-                .setBid(electionContexts.get(requestId).getMyBid())
-                .build();
-
-        stub.election(msg);
+        t.setDaemon(true);
+        t.start();
     }
 
 
-    public synchronized void onElectionMessage(
-            long requestId,
-            int candidateId,
-            float candidateBid
-    ) {
-        ElectionContext ctx = electionContexts.get(requestId);
-        if (ctx == null) {
+    private void startElection(EnergyRequest req) {
+        logger.info("[ELECTION-START] plant={} request={}", id, req.getTimestamp());
+        PlantCoordinationServiceBlockingStub nextStub;
+        float myBid = generateBid();
+        synchronized (this) {
+            int successorId = retrieveSuccessorId();
+            ElectionContext ctx = new ElectionContext(req, myBid);
+            ctx.setParticipant(true);
+            electionContexts.put(ctx.getRequest().getTimestamp(),ctx);
+            nextStub = stubs.get(successorId);
+        }
+
+        forwardElection(nextStub, req.getTimestamp(), id, myBid);
+    }
+
+    public void onElectionMessage(long requestId, int candidateId, float candidateBid) {
+        PlantCoordinationServiceBlockingStub nextStub;
+        ElectionContext ctx;
+
+        synchronized (this) {
+            int successorId = retrieveSuccessorId();
+            ctx = electionContexts.get(requestId);
+            nextStub = stubs.get(successorId);
+        }
+        if (plantState.isBusy() || ctx == null) {
+            forwardElection(nextStub, requestId, candidateId, candidateBid);
             return;
         }
-
-        int successorId = retrieveSuccessorId();
-        PlantCoordinationServiceBlockingStub stub = stubs.get(successorId);
-        if (stub == null) {
-            return; // rete non pronta, fuori specifica ma safe
-        }
-
-        // Caso 1: il mio messaggio ha fatto il giro → vinco
-        if (candidateId == id) {
+        if (id == candidateId) {
             ctx.setParticipant(false);
-
-            ElectedMessage msg = ElectedMessage.newBuilder()
-                    .setRequestId(requestId)
-                    .setWinnerId(id)
-                    .build();
-
-            stub.elected(msg);
-            return;
-        }
-
-        // Caso 2: BUSY → non competo
-        if (plantState.isBusy()) {
-            forwardElection(stub, requestId, candidateId, candidateBid);
-            return;
-        }
-
-        float myBid = ctx.getMyBid();
-
-        boolean receivedIsBetter =
-                candidateBid < myBid ||
-                        (candidateBid == myBid && candidateId > id);
-
-        // Caso 3a: candidato ricevuto migliore
-        if (receivedIsBetter) {
+            forwardElected(nextStub, requestId, id);
+        } else if (candidateBid < ctx.getMyBid() || (candidateBid == ctx.getMyBid() && candidateId > id)) {
             ctx.setParticipant(true);
-            forwardElection(stub, requestId, candidateId, candidateBid);
-            return;
+            forwardElection(nextStub, requestId, candidateId, candidateBid);
+        } else if (!ctx.isParticipant()) {
+            ctx.setParticipant(true);
+            forwardElection(nextStub, requestId, id, ctx.getMyBid());
         }
 
-        // Caso 3b: il mio candidato è migliore
-        if (!ctx.isParticipant()) {
-            ctx.setParticipant(true);
-            forwardElection(stub, requestId, id, myBid);
-        }
-        // se participant → estinzione messaggio
     }
-
 
     private void forwardElection(PlantCoordinationServiceBlockingStub stub, long requestId, int candidateId, float bid) {
         ElectionMessage msg = ElectionMessage.newBuilder()
@@ -526,72 +507,81 @@ public class ThermalPowerPlant {
                 .setCandidateId(candidateId)
                 .setBid(bid)
                 .build();
-
         stub.election(msg);
     }
 
-    public synchronized void onElected(long requestId, int winnerId) {
-
-        ElectionContext ctx = electionContexts.remove(requestId);
-        if (ctx == null) {
-            return;
-        }
-
-        ctx.setParticipant(false);
-
-        if (winnerId != id) {
-            int successorId = retrieveSuccessorId();
-            PlantCoordinationServiceBlockingStub stub = stubs.get(successorId);
-            if (stub != null) {
-                ElectedMessage msg = ElectedMessage.newBuilder()
-                        .setRequestId(requestId)
-                        .setWinnerId(winnerId)
-                        .build();
-                stub.elected(msg);
-            }
-            return;
-        }
-
-        // Sono il vincitore
-        handleWin(requestId);
+    public void forwardElected(PlantCoordinationServiceBlockingStub stub, long requestId, int winnerId) {
+        ElectedMessage msg = ElectedMessage.newBuilder()
+                .setRequestId(requestId)
+                .setWinnerId(winnerId)
+                .build();
+        stub.elected(msg);
     }
 
-    private void cancelEnergyRequest() {
+    public void onElected(long requestId, int winnerId) {
+        PlantCoordinationServiceBlockingStub nextStub;
+        ElectionContext ctx;
+        synchronized (this) {
+            int successorId = retrieveSuccessorId();
+            ctx = electionContexts.get(requestId);
+            nextStub = stubs.get(successorId);
+            handledRequests.add(requestId);
+
+        }
+
+        if (plantState.isBusy() || ctx == null) {
+            forwardElected(nextStub, requestId, winnerId);
+            return;
+        }
+
+        if (winnerId == id) {
+            handleWin(requestId);
+        } else {
+            ctx.setParticipant(false);
+            forwardElected(nextStub, requestId, winnerId);
+        }
+
+    }
+
+    private void handleWin(long requestId) {
+    logger.info("[ELECTION-WIN] plant={} request={}", id, requestId);
+    cancelEnergyRequestOnMQTT();
+    EnergyRequest req;
+    synchronized (this) {
+        ElectionContext ctx = electionContexts.get(requestId);
+
+
+        if (ctx == null) {
+            logger.warn("Election context already processed for request {}", requestId);
+            return;
+        }
+
+        req = ctx.getRequest();
+
+        if (!plantState.tryAcquire(req.getTimestamp())) {
+            logger.warn("Plant {} already busy, cannot handle win for request {}", id, requestId);
+            electionContexts.remove(requestId);
+            return;
+        }
+
+        electionContexts.remove(requestId);
+    }
+
+    produceEnergy(req);
+}
+
+    private void cancelEnergyRequestOnMQTT() {
         try {
             MqttMessage empty = new MqttMessage(new byte[0]);
             empty.setQos(1);
             empty.setRetained(true);
 
-            mqttClient.publish("energy/requests", empty);
+            mqttClient.publish(ER_TOPIC, empty);
+            logger.info("Cancelled retained energy request on topic {}", ER_TOPIC);
         } catch (Exception e) {
             logger.error("Failed to cancel retained energy request", e);
         }
     }
-
-    private void handleWin(long requestId) {
-
-        EnergyRequest req = pendingRequests.remove(requestId);
-        if (req == null) {
-            return;
-        }
-
-        // Tentativo atomico di acquisizione
-        if (!plantState.tryAcquire(requestId)) {
-            return;
-        }
-
-        logger.info(
-                "[ELECTION-WIN] plant={} request={} bid={}",
-                id,
-                requestId,
-                electionContexts.get(requestId) != null
-                        ? electionContexts.get(requestId).getMyBid()
-                        : "N/A"
-        );
-        cancelEnergyRequest();
-        produceEnergy(req);
-    }
-
 
     public void start() throws Exception {
         logger.info("Starting ThermalPowerPlant {}", id);
@@ -612,7 +602,8 @@ public class ThermalPowerPlant {
 
         startHeartbeatThread();
 
-        connectMQTT();
+        startElectionThread();
+        connectMQTTSubscriberThread();
         startMqttOutboundThread();
         startPollutionPublisherThread();
 
@@ -621,6 +612,7 @@ public class ThermalPowerPlant {
 
     private void produceEnergy(EnergyRequest request) {
         try {
+            logger.info("[PRODUCTION-START] plant={} request={}", id, request.getTimestamp());
             Thread.sleep((long) request.getAmount());
             logger.info("[PRODUCTION-END] plant={} request={}", id, request.getTimestamp());
         } catch (InterruptedException e) {
@@ -688,17 +680,12 @@ public class ThermalPowerPlant {
         }).start();
     }
 
-    public static void main(String[] args) {
-        try {
+    public static void main(String[] args) throws Exception {
+
             int id = insertID();
             ThermalPowerPlant plant = new ThermalPowerPlant(id);
 
             plant.start();
-            Thread.sleep(30000);
 
-
-        } catch (Exception e) {
-            logger.error("Fatal error in ThermalPowerPlant main", e);
-        }
     }
 }

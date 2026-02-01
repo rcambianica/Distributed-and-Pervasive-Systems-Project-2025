@@ -1,6 +1,6 @@
 package it.unimi.tpp;
 
-public class ThermalPlantState {
+public class  ThermalPlantState {
 
     public enum Status {
         IDLE,

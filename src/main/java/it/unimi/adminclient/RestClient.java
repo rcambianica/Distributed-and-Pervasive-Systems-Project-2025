@@ -130,6 +130,7 @@ public class RestClient {
                     .DELETE()
                     .build();
             httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+            logger.info("Plant {} removed successfully", id);
         } catch (Exception e) {
             logger.error("Error removing plant {}", id, e);
         }

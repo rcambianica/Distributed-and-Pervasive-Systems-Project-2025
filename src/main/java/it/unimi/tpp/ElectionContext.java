@@ -1,19 +1,27 @@
 package it.unimi.tpp;
 
+import it.unimi.rep.EnergyRequest;
+
 public class ElectionContext {
 
-    private final long requestId;
+    private final EnergyRequest request;
     private final float myBid;
     private boolean participant;
 
-    public ElectionContext(long requestId, float myBid) {
-        this.requestId = requestId;
+    public ElectionContext(EnergyRequest request) {
+        this.request = request;
+        this.myBid = -1;
+        this.participant = false;
+    }
+
+    public ElectionContext(EnergyRequest request, float myBid) {
+        this.request = request;
         this.myBid = myBid;
         this.participant = false;
     }
 
-    public long getRequestId() {
-        return requestId;
+    public EnergyRequest getRequest() {
+        return request;
     }
 
     public float getMyBid() {
@@ -28,3 +36,4 @@ public class ElectionContext {
         this.participant = participant;
     }
 }
+
