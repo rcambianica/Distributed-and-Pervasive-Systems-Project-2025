@@ -58,7 +58,7 @@ public class AdminServerApp {
         }
     }
 
-
+    /*
     @PostConstruct
     public void startFailureDetector() {
         new Thread(() -> {
@@ -89,7 +89,7 @@ public class AdminServerApp {
         }).start();
     }
 
-
+*/
     private Pollution deserializePollution(String payload) {
         String[] parts = payload.split(",");
 

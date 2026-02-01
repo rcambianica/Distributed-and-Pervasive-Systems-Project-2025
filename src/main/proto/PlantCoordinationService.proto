@@ -15,6 +15,11 @@ message ElectedMessage {
 
 message Empty {}
 
+message JoinNotification  {
+  int32 plantId = 1;
+  int32 port = 2;
+}
+
 message ExitNotification  {
   int32 plantId = 1;
 }
@@ -22,5 +27,6 @@ message ExitNotification  {
 service PlantCoordinationService  {
   rpc election(ElectionMessage) returns (Empty);
   rpc elected(ElectedMessage) returns (Empty);
+  rpc notifyJoin(JoinNotification) returns (Empty);
   rpc notifyExit(ExitNotification) returns (Empty);
 }

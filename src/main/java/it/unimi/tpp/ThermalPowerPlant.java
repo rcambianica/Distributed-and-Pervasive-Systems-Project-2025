@@ -16,15 +16,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.grpc.*;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.*;
+
+import static java.lang.Thread.sleep;
 
 public class ThermalPowerPlant {
 
     private static final Logger logger =
             LoggerFactory.getLogger(ThermalPowerPlant.class);
+    private static final Scanner STDIN = new Scanner(System.in);
+
 
     private final int id;
     private final int portNumber;
@@ -50,7 +51,7 @@ public class ThermalPowerPlant {
 
 
     private final MyLock networkLock = new MyLock();
-    private static final Map<Integer, Plant> knownPlants = new HashMap<>();
+    private final Map<Integer, Plant> knownPlants = new HashMap<>();
     private final Map<Integer, PlantCoordinationServiceBlockingStub> stubs =
             new HashMap<>();
 
@@ -64,64 +65,50 @@ public class ThermalPowerPlant {
     /**
      * Determines ID of the next plant to recreate a ring topology used by the Chang&Roberts algorithm.
      */
-    private int retrieveSuccessorId() {
-        try {
-            networkLock.lock();
-            try {
-                List<Integer> ids = new ArrayList<>(knownPlants.keySet());
-                ids.add(this.id);
-                Collections.sort(ids);
-                int index = ids.indexOf(this.id);
-                return ids.get((index + 1) % ids.size());
-            } finally {
-                networkLock.unlock();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return this.id;
+    private int retrieveSuccessorId(ElectionContext ctx) {
+
+        List<Integer> ids = ctx.getElectionView();
+
+        int index = ids.indexOf(this.id);
+        if (index == -1) {
+            throw new IllegalStateException(
+                    "Current plant not present in election view");
         }
+
+        return ids.get((index + 1) % ids.size());
     }
+
 
     private float generateBid() {
         return 0.1f + (float) Math.random() * (0.9f - 0.1f);
     }
 
     private static int insertID() {
-        try {
-            RestClient restClient = new RestClient(REST_SERVER_ADDRESS, REST_SERVER_PORT);
-            BufferedReader reader =
-                    new BufferedReader(new InputStreamReader(System.in));
-            int id;
+        RestClient restClient = new RestClient(REST_SERVER_ADDRESS, REST_SERVER_PORT);
 
-            while (true) {
-                System.out.print("Enter plant ID (>0): ");
-                id = Integer.parseInt(reader.readLine());
 
-                if (id <= 0) {
-                    System.out.println("ID must be > 0");
-                    continue;
-                }
+        while (true) {
+            System.out.print("Enter plant ID (>0): ");
+            int id = STDIN.nextInt();
 
-                List<Plant> network = restClient.getNetwork();
-
-                boolean alreadyUsed = false;
-                for (Plant p : network) {
-                    if (p.getId() == id) {
-                        alreadyUsed = true;
-                        break;
-                    }
-                }
-
-                if (alreadyUsed) {
-                    System.out.println("ID already in use by an active plant");
-                    continue;
-                }
-
-                return id;
+            if (id <= 0) {
+                System.out.println("ID must be > 0");
+                continue;
             }
 
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid plant ID", e);
+            List<Plant> network = restClient.getNetwork();
+            for (Plant p : network) {
+                if (p.getId() == id) {
+                    System.out.println("ID already in use by an active plant");
+                    id = -1;
+                    break;
+                }
+            }
+
+            if (id > 0) {
+                STDIN.nextLine();
+                return id;
+            }
         }
     }
 
@@ -137,29 +124,33 @@ public class ThermalPowerPlant {
                     if (p.getId() != this.id) {
                         knownPlants.put(p.getId(), p);
                     }
-
-                logger.info("Initial network view: {}", knownPlants.keySet());
                 }
+            logger.info("Initial network view: {}", knownPlants.keySet());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.error("Interrupted during network initialization", e);
         } finally {networkLock.unlock();}
     }
 
-    /**
-     * Removes gRPC stubs for inactive plants from the cache
-     * **/
-    private void removeObsoleteStubs(Set<Integer> activeIds) {
+    private void announceJoin() {
+
+        JoinNotification msg = JoinNotification.newBuilder()
+                .setPlantId(id)
+                .setPort(portNumber)
+                .build();
+
         try {
             networkLock.lock();
             try {
-                Iterator<Map.Entry<Integer, PlantCoordinationServiceBlockingStub>> it =
-                        stubs.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry<Integer, PlantCoordinationServiceBlockingStub> entry = it.next();
-                    if (!activeIds.contains(entry.getKey())) {
-                        it.remove();
-                        logger.warn("Removed gRPC stub for plant {}", entry.getKey());
+                for (Map.Entry<Integer, PlantCoordinationServiceBlockingStub> entry : stubs.entrySet()) {
+                    int targetId = entry.getKey();
+                    PlantCoordinationServiceBlockingStub stub = entry.getValue();
+
+                    try {
+                        stub.notifyJoin(msg);
+                        logger.info("Join sent to plant {}", targetId);
+                    } catch (Exception e) {
+                        logger.warn("Failed to send JOIN to plant {}", targetId);
                     }
                 }
             } finally {
@@ -170,35 +161,24 @@ public class ThermalPowerPlant {
         }
     }
 
-    /**
-     * Updates network view; removes obsolete stubs; restarts gRPC client
-     */
-    private void updateNetwork(List<Plant> snapshot) {
-        Map<Integer, Plant> newView = new HashMap<>();
-        for (Plant p : snapshot) {
-            if (p.getId() != this.id) {
-                newView.put(p.getId(), p);
-            }
-        }
+    private void announceExit() {
+
+        ExitNotification msg = ExitNotification.newBuilder()
+                .setPlantId(id)
+                .build();
 
         try {
             networkLock.lock();
             try {
-                for (Map.Entry<Integer, Plant> entry : newView.entrySet()) {
-                    Integer pid = entry.getKey();
-                    if (!knownPlants.containsKey(pid)) {
-                        knownPlants.put(pid, entry.getValue());
-                        logger.info("Plant {} joined the network", pid);
-                    }
-                }
+                for (Map.Entry<Integer, PlantCoordinationServiceBlockingStub> entry : stubs.entrySet()) {
+                    int targetId = entry.getKey();
+                    PlantCoordinationServiceBlockingStub stub = entry.getValue();
 
-                Iterator<Map.Entry<Integer, Plant>> it =
-                        knownPlants.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry<Integer, Plant> entry = it.next();
-                    if (!newView.containsKey(entry.getKey())) {
-                        logger.warn("Plant {} removed from network", entry.getKey());
-                        it.remove();
+                    try {
+                        stub.notifyExit(msg);
+                        logger.info("Exit sent to plant {}", targetId);
+                    } catch (Exception e) {
+                        logger.warn("Failed to send EXIT to plant {}", targetId);
                     }
                 }
             } finally {
@@ -206,53 +186,130 @@ public class ThermalPowerPlant {
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            logger.error("Interrupted during network update", e);
-            return;
         }
-
-        Set<Integer> activeIds;
-        try {
-            networkLock.lock();
-            try {
-                activeIds = new HashSet<>(knownPlants.keySet());
-            } finally {
-                networkLock.unlock();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return;
-        }
-
-        removeObsoleteStubs(activeIds);
-        startGRPCClient();
     }
 
-    /**
-     *  Thread that periodically refreshes network snapshot using updateNetwork(); handles errors
-     * **/
-    private void startNetworkRefresher() {
-        Thread refresher = new Thread(() -> {
-            logger.info("Starting network refresher thread");
-            while (!stopFlag) {
+    public void handleRemoteJoin(int pid, int port) {
 
-                try {
-                    List<Plant> snapshot = restClient.getNetwork();
-                    if (snapshot != null) {
-                        updateNetwork(snapshot);
-                    }
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    logger.error("Error during network refresh", e);
-                    return;
-                } catch (Exception e) {
-                    logger.error("Error during network refresh", e);
+        List<Plant> targets = new ArrayList<>();
+
+        try {
+            networkLock.lock();
+            try {
+                if (pid == this.id || knownPlants.containsKey(pid)) {
+                    return; // JOIN già visto
                 }
-            }
-        });
 
-        refresher.setDaemon(true);
-        refresher.start();
+                Plant p = new Plant(pid, port);
+                knownPlants.put(pid, p);
+                logger.info("Plant {} added to local view", pid);
+
+
+                for (Plant other : knownPlants.values()) {
+                    if (other.getId() != pid) {
+                        targets.add(other);
+                    }
+                }
+            } finally {
+                networkLock.unlock();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+
+        // crea stub per il nuovo peer
+        createStubIfAbsent(pid, port);
+
+        // flooding guidato dalla VISTA LOGICA
+        for (Plant target : targets) {
+            createStubIfAbsent(target.getId(), target.getPort());
+            try {
+                stubs.get(target.getId()).notifyJoin(
+                        JoinNotification.newBuilder()
+                                .setPlantId(pid)
+                                .setPort(port)
+                                .build()
+                );
+            } catch (Exception e) {
+                logger.warn("Failed to propagate JOIN to {}", target.getId());
+            }
+        }
+    }
+
+
+    private void propagateExit(int pid) {
+
+        ExitNotification msg = ExitNotification.newBuilder()
+                .setPlantId(pid)
+                .build();
+
+        try {
+            networkLock.lock();
+            try {
+                for (var stub : stubs.values()) {
+                    try {
+                        stub.notifyExit(msg);
+                    } catch (Exception ignored) {}
+                }
+            } finally {
+                networkLock.unlock();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public void handleRemoteExit(int pid) {
+
+        boolean removed = false;
+
+        try {
+            networkLock.lock();
+            try {
+                if (knownPlants.containsKey(pid)) {
+                    knownPlants.remove(pid);
+                    stubs.remove(pid);
+                    removed = true;
+                    logger.info("Plant {} removed from local view", pid);
+                }
+            } finally {
+                networkLock.unlock();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+        if (!removed) {
+            return;
+        }
+
+        propagateExit(pid);
+    }
+
+    private void createStubIfAbsent(int pid, int port) {
+        try {
+            networkLock.lock();
+            try {
+                if (stubs.containsKey(pid)) return;
+
+                ManagedChannel channel =
+                        ManagedChannelBuilder.forAddress("localhost", port)
+                                .usePlaintext()
+                                .build();
+
+                var stub =
+                        PlantCoordinationServiceGrpc.newBlockingStub(channel);
+
+                stubs.put(pid, stub);
+
+                logger.info("Created gRPC stub for plant {}", pid);
+            } finally {
+                networkLock.unlock();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void startGRPCServer() throws Exception {
@@ -346,7 +403,7 @@ public class ThermalPowerPlant {
                 try {
                     List<Measurement> window = buffer.extractWindowIfAvailable();
                     if (window == null) {
-                        Thread.sleep(500);
+                        sleep(500);
                         continue;
                     }
 
@@ -378,7 +435,7 @@ public class ThermalPowerPlant {
             while (!stopFlag) {
                 try {
                     restClient.sendHeartbeat(id);
-                    Thread.sleep(5000);
+                    sleep(5000);
                 } catch (Exception e) {
                     logger.warn("Heartbeat failed", e);
                 }
@@ -459,47 +516,67 @@ public class ThermalPowerPlant {
         t.start();
     }
 
-
     private void startElection(EnergyRequest req) {
+
         logger.info("[ELECTION-START] plant={} request={}", id, req.getTimestamp());
-        PlantCoordinationServiceBlockingStub nextStub;
+
         float myBid = generateBid();
+        ElectionContext ctx;
+        PlantCoordinationServiceBlockingStub nextStub;
+
         synchronized (this) {
-            int successorId = retrieveSuccessorId();
-            ElectionContext ctx = new ElectionContext(req, myBid);
+
+            // 1. costruzione SNAPSHOT
+            List<Integer> electionView = new ArrayList<>(knownPlants.keySet());
+            electionView.add(this.id);
+            Collections.sort(electionView);
+
+            // 2. creazione contesto
+            ctx = new ElectionContext(req, myBid, electionView);
             ctx.setParticipant(true);
-            electionContexts.put(ctx.getRequest().getTimestamp(),ctx);
+            electionContexts.put(req.getTimestamp(), ctx);
+
+            // 3. calcolo successore sulla SNAPSHOT
+            int successorId = retrieveSuccessorId(ctx);
             nextStub = stubs.get(successorId);
         }
 
         forwardElection(nextStub, req.getTimestamp(), id, myBid);
     }
 
+
     public void onElectionMessage(long requestId, int candidateId, float candidateBid) {
-        PlantCoordinationServiceBlockingStub nextStub;
+
         ElectionContext ctx;
+        PlantCoordinationServiceBlockingStub nextStub;
 
         synchronized (this) {
-            int successorId = retrieveSuccessorId();
             ctx = electionContexts.get(requestId);
+            if (ctx == null) {
+                return;
+            }
+            int successorId = retrieveSuccessorId(ctx);
             nextStub = stubs.get(successorId);
         }
-        if (plantState.isBusy() || ctx == null) {
+
+        if (plantState.isBusy()) {
             forwardElection(nextStub, requestId, candidateId, candidateBid);
             return;
         }
+
         if (id == candidateId) {
             ctx.setParticipant(false);
             forwardElected(nextStub, requestId, id);
-        } else if (candidateBid < ctx.getMyBid() || (candidateBid == ctx.getMyBid() && candidateId > id)) {
+        } else if (candidateBid < ctx.getMyBid()
+                || (candidateBid == ctx.getMyBid() && candidateId > id)) {
             ctx.setParticipant(true);
             forwardElection(nextStub, requestId, candidateId, candidateBid);
         } else if (!ctx.isParticipant()) {
             ctx.setParticipant(true);
             forwardElection(nextStub, requestId, id, ctx.getMyBid());
         }
-
     }
+
 
     private void forwardElection(PlantCoordinationServiceBlockingStub stub, long requestId, int candidateId, float bid) {
         ElectionMessage msg = ElectionMessage.newBuilder()
@@ -519,17 +596,22 @@ public class ThermalPowerPlant {
     }
 
     public void onElected(long requestId, int winnerId) {
-        PlantCoordinationServiceBlockingStub nextStub;
+
         ElectionContext ctx;
+        PlantCoordinationServiceBlockingStub nextStub;
+
         synchronized (this) {
-            int successorId = retrieveSuccessorId();
             ctx = electionContexts.get(requestId);
+            if (ctx == null) {
+                return;
+            }
+
+            int successorId = retrieveSuccessorId(ctx);
             nextStub = stubs.get(successorId);
             handledRequests.add(requestId);
-
         }
 
-        if (plantState.isBusy() || ctx == null) {
+        if (plantState.isBusy()) {
             forwardElected(nextStub, requestId, winnerId);
             return;
         }
@@ -540,7 +622,6 @@ public class ThermalPowerPlant {
             ctx.setParticipant(false);
             forwardElected(nextStub, requestId, winnerId);
         }
-
     }
 
     private void handleWin(long requestId) {
@@ -590,17 +671,22 @@ public class ThermalPowerPlant {
 
         Plant plant = new Plant(id, portNumber);
         List<Plant> initialNetwork = restClient.registerPlantAndGetNetwork(plant);
+
         initializeNetwork(initialNetwork);
+
         startGRPCServer();
-        startNetworkRefresher();
         startGRPCClient();
+
+        if (!initialNetwork.isEmpty()) {
+            announceJoin();
+        }
 
         buffer = new SlidingWindowBuffer();
         sensor = new PollutionSensor(buffer);
         sensor.start();
         logger.info("Pollution sensor started");
 
-        startHeartbeatThread();
+        //startHeartbeatThread();
 
         startElectionThread();
         connectMQTTSubscriberThread();
@@ -613,7 +699,7 @@ public class ThermalPowerPlant {
     private void produceEnergy(EnergyRequest request) {
         try {
             logger.info("[PRODUCTION-START] plant={} request={}", id, request.getTimestamp());
-            Thread.sleep((long) request.getAmount());
+            sleep((long) request.getAmount());
             logger.info("[PRODUCTION-END] plant={} request={}", id, request.getTimestamp());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -621,24 +707,6 @@ public class ThermalPowerPlant {
         } finally {
             plantState.release(request.getTimestamp());
         }
-    }
-
-    public void handleRemoteExit(int pid) {
-        try {
-            networkLock.lock();
-            try {
-                knownPlants.remove(pid);
-                stubs.remove(pid);
-                logger.info("Handled remote exit of plant {}", pid);
-            } finally {
-                networkLock.unlock();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.error("Interrupted while handling remote exit of plant {}", pid, e);
-        }
-
-        // abort election?
     }
 
     public void stop() {
@@ -656,29 +724,34 @@ public class ThermalPowerPlant {
         } catch (MqttException e) {
             logger.error("Error during MQTT disconnect", e);
         }
-        for (PlantCoordinationServiceBlockingStub stub : stubs.values()) {
-            stub.notifyExit(ExitNotification.newBuilder()
-                    .setPlantId(id)
-                    .build());
-        }
+
+        announceExit();
 
         restClient.removePlant(this.id);
         logger.info("ThermalPowerPlant {} stopped", id);
     }
 
     private void startCommandListener() {
-        new Thread(() -> {
-            try (Scanner sc = new Scanner(System.in)) {
-                while (!stopFlag) {
-                    String cmd = sc.nextLine();
+        Thread t = new Thread(() -> {
+
+            while (!stopFlag) {
+                try {
+                    String cmd = STDIN.nextLine();
                     if ("exit".equalsIgnoreCase(cmd.trim())) {
                         stop();
                         break;
                     }
+                } catch (Exception e) {
+                    logger.error("Error reading command", e);
+                    break;
                 }
             }
-        }).start();
+        });
+
+        t.setDaemon(true);
+        t.start();
     }
+
 
     public static void main(String[] args) throws Exception {
 
