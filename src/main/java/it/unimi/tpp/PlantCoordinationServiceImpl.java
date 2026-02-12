@@ -53,31 +53,40 @@ public class PlantCoordinationServiceImpl
 
     @Override
     public void notifyJoin(JoinNotification request,
-                           StreamObserver<Empty> responseObserver) {
+                           StreamObserver<JoinAck> responseObserver) {
 
         int pid = request.getPlantId();
         int port = request.getPort();
 
-        logger.info("[RPC] JOIN received join from plant {}", pid);
+        logger.info("[RPC] JOIN received from plant {}", pid);
 
         plant.handleRemoteJoin(pid, port);
 
-        responseObserver.onNext(Empty.getDefaultInstance());
+        JoinAck ack = JoinAck.newBuilder()
+                .setPlantId(plant.getId())
+                .setPort(plant.getPortNumber())
+                .build();
+
+        responseObserver.onNext(ack);
         responseObserver.onCompleted();
     }
 
     @Override
-    public void notifyExit(ExitNotification request, StreamObserver<Empty> responseObserver) {
+    public void notifyExit(ExitNotification request,
+                           StreamObserver<ExitAck> responseObserver) {
 
         int exitingPlantId = request.getPlantId();
-
-        logger.info("[RPC] EXIT notification received from plant {}", exitingPlantId);
-
+        logger.info("[RPC] EXIT received from plant {}", exitingPlantId);
         plant.handleRemoteExit(exitingPlantId);
 
-        responseObserver.onNext(Empty.getDefaultInstance());
+        ExitAck ack = ExitAck.newBuilder()
+                .setPlantId(plant.getId())
+                .build();
+
+        responseObserver.onNext(ack);
         responseObserver.onCompleted();
     }
+
 
 
 }

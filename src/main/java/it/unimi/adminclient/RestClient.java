@@ -64,6 +64,7 @@ public class RestClient {
     }
 
     public List<Plant> registerPlantAndGetNetwork(Plant plant) {
+        List<Plant> network = getNetwork();
         String endpoint = serverBaseUrl + "/plants";
         try {
             String body = objectMapper.writeValueAsString(plant);
@@ -90,7 +91,7 @@ public class RestClient {
             logger.error("Error during plant registration", e);
         }
 
-        return getNetwork();
+        return network;
     }
 
 

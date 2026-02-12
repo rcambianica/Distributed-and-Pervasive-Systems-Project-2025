@@ -33,7 +33,7 @@ public class RenewableEnergyProvider {
                     String payload = EnergyRequestMapper.serialize(req);
                     MqttMessage msg = new MqttMessage(payload.getBytes());
                     msg.setQos(1);
-                    msg.setRetained(true);
+                    msg.setRetained(false);
                     client.publish(ER_TOPIC, msg);
                     logger.debug("Request published: {}", payload);
                     Thread.sleep(10000);
