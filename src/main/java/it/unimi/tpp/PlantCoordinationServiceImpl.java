@@ -21,10 +21,6 @@ public class PlantCoordinationServiceImpl
         this.plant = plant;
     }
 
-    /**
-     * Ricezione messaggio <ELECTION, requestId, candidateId, bid>
-     * Forward-only: la decisione è interamente locale al plant.
-     */
     @Override
     public void election(ElectionMessage request, StreamObserver<Empty> responseObserver) {
 
@@ -36,10 +32,6 @@ public class PlantCoordinationServiceImpl
         responseObserver.onCompleted();
     }
 
-    /**
-     * Ricezione messaggio <ELECTED, requestId, winnerId>
-     * Serve solo a propagare il vincitore e terminare l’elezione.
-     */
     @Override
     public void elected(ElectedMessage request, StreamObserver<Empty> responseObserver) {
 
@@ -73,21 +65,13 @@ public class PlantCoordinationServiceImpl
 
     @Override
     public void notifyExit(ExitNotification request,
-                           StreamObserver<ExitAck> responseObserver) {
+                           StreamObserver<Empty> responseObserver) {
 
         int exitingPlantId = request.getPlantId();
         logger.info("[RPC] EXIT received from plant {}", exitingPlantId);
         plant.handleRemoteExit(exitingPlantId);
-
-        ExitAck ack = ExitAck.newBuilder()
-                .setPlantId(plant.getId())
-                .build();
-
-        responseObserver.onNext(ack);
+        responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
     }
-
-
-
 }
 

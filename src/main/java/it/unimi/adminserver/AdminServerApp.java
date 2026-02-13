@@ -24,7 +24,7 @@ public class AdminServerApp {
     private static final String MQTT_BROKER = "tcp://localhost:1883";
     private static final String POLLUTION_TOPIC = "pollution/averages";
     private static final long HEARTBEAT_TIMEOUT = 15_000;
-    // reminder: PostConstruct starts automatically the thread when Spring starts the Main
+
     @PostConstruct
     public void startMQTTSubscriber() {
         try {
@@ -58,7 +58,6 @@ public class AdminServerApp {
         }
     }
 
-    /*
     @PostConstruct
     public void startFailureDetector() {
         new Thread(() -> {
@@ -89,7 +88,6 @@ public class AdminServerApp {
         }).start();
     }
 
-*/
     private Pollution deserializePollution(String payload) {
         String[] parts = payload.split(",");
 

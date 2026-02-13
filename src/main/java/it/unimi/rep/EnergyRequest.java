@@ -4,7 +4,7 @@ import java.time.Instant;
 
 public class EnergyRequest {
     private final long timestamp;   //concettualmente svolge anche ruolo di id della richiesta
-    private final int amount; // kWh richiesti
+    private final int amount;
 
     public EnergyRequest(long timestamp, int amount) {
         this.timestamp = timestamp;

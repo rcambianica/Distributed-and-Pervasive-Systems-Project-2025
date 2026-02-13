@@ -29,13 +29,9 @@ message JoinAck {
   int32 port = 2;
 }
 
-message ExitAck {
-  int32 plantId = 1;
-}
-
 service PlantCoordinationService  {
   rpc election(ElectionMessage) returns (Empty);
   rpc elected(ElectedMessage) returns (Empty);
   rpc notifyJoin(JoinNotification) returns (JoinAck);
-  rpc notifyExit(ExitNotification) returns (ExitAck);
+  rpc notifyExit(ExitNotification) returns (Empty);
 }
