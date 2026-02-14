@@ -2,6 +2,7 @@ package it.unimi.tpp;
 
 import it.unimi.adminclient.RestClient;
 import it.unimi.adminserver.model.Plant;
+import it.unimi.adminserver.model.Pollution;
 import it.unimi.grpc.PlantCoordinationServiceGrpc;
 import it.unimi.grpc.PlantCoordinationServiceGrpc.*;
 import it.unimi.grpc.PlantCoordinationServiceOuterClass.*;
@@ -45,7 +46,6 @@ public class ThermalPowerPlant {
     private PollutionSensor sensor;
 
     private RestClient restClient;
-
     private MqttClient mqttClient;
     private Server grpcServer;
     private final LinkedList<Runnable> mqttQueue = new LinkedList<>();
@@ -72,6 +72,9 @@ public class ThermalPowerPlant {
 
     public int getPortNumber() {return portNumber;}
 
+    /**
+     * Computes successor ID within the ring order
+     */
     private int retrieveSuccessorId(int myId, List<Integer> ringOrder) {
 
         int index = ringOrder.indexOf(myId);
@@ -81,6 +84,26 @@ public class ThermalPowerPlant {
         return ringOrder.get((index + 1) % ringOrder.size());
     }
 
+    private int extractStubId(PlantCoordinationServiceBlockingStub stub) {
+
+        // Extracts stub ID from the stub map safely
+        try {
+            networkLock.lock();
+
+            for (Map.Entry<Integer, PlantCoordinationServiceBlockingStub> entry : stubs.entrySet()) {
+                if (entry.getValue() == stub) {
+                    return entry.getKey();
+                }
+            }
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            networkLock.unlock();
+        }
+
+        return -1;
+    }
 
     private float generateBid() {
         return 0.1f + (float) Math.random() * (0.9f - 0.1f);
@@ -88,6 +111,7 @@ public class ThermalPowerPlant {
 
     private static int insertID() {
         RestClient restClient = new RestClient(REST_SERVER_ADDRESS, REST_SERVER_PORT);
+        // Acquires unique plant ID from user input
         while (true) {
             System.out.print("Enter plant ID (>0): ");
             int id = STDIN.nextInt();
@@ -114,6 +138,7 @@ public class ThermalPowerPlant {
     }
 
     private void setKnownPlants(List<Plant> network) {
+        // Updates known plants; handles interruption safely
         try {
             networkLock.lock();
             knownPlants.clear();
@@ -161,6 +186,7 @@ public class ThermalPowerPlant {
 
     public void handleRemoteJoin(int pid, int port) {
 
+        // Adds joining plant to the local network view
         try {
             networkLock.lock();
 
@@ -185,6 +211,7 @@ public class ThermalPowerPlant {
     private void createStubIfAbsent(int pid, int port) {
         try {
             networkLock.lock();
+            // Creates and caches gRPC stub if absent
             try {
                 if (stubs.containsKey(pid)) return;
 
@@ -221,6 +248,9 @@ public class ThermalPowerPlant {
         completeExitProcedure();
     }
 
+    /**
+     * Handles remote plant exit by removing its data
+     */
     public void handleRemoteExit(int exitingPlantId) {
 
         try {
@@ -237,6 +267,9 @@ public class ThermalPowerPlant {
         abortAllElectionsDueToTopologyChange();
     }
 
+    /**
+     * Aborts and restarts elections after topology change
+     */
     private void abortAllElectionsDueToTopologyChange() {
 
         List<EnergyRequest> toRestart = new ArrayList<>();
@@ -245,6 +278,7 @@ public class ThermalPowerPlant {
         try {
             stateLock.lock();
 
+            // Clears in‑progress elections; prepares to restart them
             if (!electionsInProgress.isEmpty()) {
                 hadActiveElections = true;
 
@@ -279,11 +313,15 @@ public class ThermalPowerPlant {
         logger.info("[ABORT] active elections invalidated due to topology change");
     }
 
+    /**
+     * Notifies peers of exit then stops the process
+     */
     private void completeExitProcedure() {
 
         List<Integer> targets;
         Map<Integer, PlantCoordinationServiceBlockingStub> stubsCopy;
 
+        // Copies network state for safe iteration
         try {
             networkLock.lock();
             targets = new ArrayList<>(knownPlants.keySet());
@@ -312,6 +350,47 @@ public class ThermalPowerPlant {
         stop();
     }
 
+    private void handleCrashOf(int crashedId, int detectorId) {
+
+        boolean removed = false;
+        Map<Integer, PlantCoordinationServiceBlockingStub> stubsCopy;
+
+        // Removes crashed plant from topology under lock
+        try {
+            networkLock.lock();
+
+            if (knownPlants.containsKey(crashedId)) {
+                knownPlants.remove(crashedId);
+                stubs.remove(crashedId);
+                removed = true;
+                logger.info("[CRASH-DETECTED] plant {} removed from topology", crashedId);
+            }
+
+            stubsCopy = new HashMap<>(stubs);
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        } finally {
+            networkLock.unlock();
+        }
+
+        if (!removed) return;
+
+        abortAllElectionsDueToTopologyChange();
+
+       CrashNotification msg = CrashNotification.newBuilder()
+                .setChashedPlantId(crashedId)
+                .setChashDetectorPlantId(detectorId)
+                .build();
+
+        for (Map.Entry<Integer, PlantCoordinationServiceBlockingStub> entry : stubsCopy.entrySet()) {
+            try {
+                entry.getValue().notifyCrash(msg);
+            } catch (Exception ignored) {}
+        }
+    }
+
     private void startGRPCServer() throws Exception {
         grpcServer = ServerBuilder.forPort(portNumber)
                 .addService(new PlantCoordinationServiceImpl(this))
@@ -330,6 +409,7 @@ public class ThermalPowerPlant {
 
     private void startMqttOutboundThread() {
         mqttOutboundThread = new Thread(() -> {
+            // Processes MQTT tasks from queue until stopped
             while (!stopFlag) {
                 Runnable task;
                 synchronized (mqttQueue) {
@@ -367,18 +447,20 @@ public class ThermalPowerPlant {
     private void startPollutionPublisherThread() {
         Thread pollutionPublisherThread = new Thread(() -> {
             while (!stopFlag) {
+                // Publishes average pollution measurement to MQTT broker
                 try {
                     List<Measurement> window = buffer.extractWindowIfAvailable();
                     if (window == null) {
-                        sleep(500);
+                        Thread.sleep(200);  // evita busy spin
                         continue;
                     }
 
-                    AverageMeasurement avg =
-                            AverageMeasurement.from(window, id);
+
+                    Pollution avg =
+                            Pollution.from(window, id);
 
                     String payload =
-                            AverageMeasurementMapper.serialize(avg);
+                            PollutionMapper.serialize(avg);
 
                     MqttMessage msg =
                             new MqttMessage(payload.getBytes());
@@ -397,12 +479,15 @@ public class ThermalPowerPlant {
         pollutionPublisherThread.start();
     }
 
+    /**
+     * Sends periodic heartbeat to REST endpoint
+     */
     private void startHeartbeatThread() {
         heartbeatThread = new Thread(() -> {
             while (!stopFlag) {
                 try {
                     restClient.sendHeartbeat(id);
-                    sleep(2000);
+                    sleep(500);
                 } catch (Exception e) {
                     logger.warn("Heartbeat failed", e);
                 }
@@ -416,6 +501,7 @@ public class ThermalPowerPlant {
         mqttClient = new MqttClient("tcp://localhost:1883", "TPP-" + id);
         mqttClient.connect();
 
+        // Subscribes to MQTT topic; enqueues energy requests
         mqttClient.subscribe(ER_TOPIC, (topic, message) -> {
 
 
@@ -440,12 +526,16 @@ public class ThermalPowerPlant {
         logger.info("Connected to MQTT broker");
     }
 
+    /**
+     * Starts a background thread to process energy requests
+     */
     private void startElectionThread() {
         Thread electionThread = new Thread(() -> {
             while (!stopFlag) {
 
                 EnergyRequest req = null;
 
+                // Polls pending requests under lock
                 try {
                     electionLock.lock();
                     if (!pendingRequests.isEmpty()) {
@@ -464,6 +554,7 @@ public class ThermalPowerPlant {
 
                 boolean shouldStart = true;
 
+                // Checks if the election is already in progress/completed
                 try {
                     stateLock.lock();
 
@@ -489,6 +580,9 @@ public class ThermalPowerPlant {
         electionThread.start();
     }
 
+    /**
+     * Starts election if not busy; forwards to successor
+     */
     private void startElection(EnergyRequest req) {
 
         if (plantState.isBusy()) {
@@ -499,10 +593,12 @@ public class ThermalPowerPlant {
 
         float myBid = generateBid();
         List<Integer> ids;
+        // Gets plant ring under network lock
         Map<Integer, PlantCoordinationServiceBlockingStub> ring;
         PlantCoordinationServiceBlockingStub nextStub;
         ElectionContext ctx;
 
+        // Acquires plant ring under network lock
         try {
             networkLock.lock();
             ids = new ArrayList<>(knownPlants.keySet());
@@ -516,6 +612,7 @@ public class ThermalPowerPlant {
             networkLock.unlock();
         }
 
+        // Acquires state lock; initializes election context; forwards election
         try {
             stateLock.lock();
             ctx = new ElectionContext(ids, ring, req, myBid, true);
@@ -532,14 +629,17 @@ public class ThermalPowerPlant {
         forwardElection(nextStub, req.getTimestamp(), id, myBid);
     }
 
+    /**
+     * Handles an election message; forwards or declares itself elected
+     */
     public void onElectionMessage(long requestId, int candidateId, float candidateBid) {
-        if (exitInProgress) {
-            return;
-        }
+
+        if (exitInProgress) return;
 
         ElectionContext ctx;
         PlantCoordinationServiceBlockingStub nextStub;
 
+        // Acquires lock; retrieves or initializes election context; releases lock
         try {
             stateLock.lock();
             ctx = electionsInProgress.get(requestId);
@@ -564,7 +664,6 @@ public class ThermalPowerPlant {
 
                 electionsInProgress.put(requestId, ctx);
             }
-
             nextStub = ctx.getRingStubs()
                     .get(retrieveSuccessorId(this.id, ctx.getRingOrder()));
 
@@ -580,6 +679,7 @@ public class ThermalPowerPlant {
             return;
         }
 
+        // Updates participant status; forwards election if needed
         if (id == candidateId) {
             ctx.setParticipant(false);
             forwardElected(nextStub, requestId, id);
@@ -591,11 +691,12 @@ public class ThermalPowerPlant {
         }
     }
 
-    private void forwardElection(
-            PlantCoordinationServiceBlockingStub stub,
-            long requestId,
-            int candidateId,
-            float bid) {
+    /**
+     * Forwards election message; retries once on transient failure
+     */
+    private void forwardElection(PlantCoordinationServiceBlockingStub stub, long requestId, int candidateId, float bid) {
+
+        if (stub == null) return;
 
         ElectionMessage msg = ElectionMessage.newBuilder()
                 .setRequestId(requestId)
@@ -614,15 +715,28 @@ public class ThermalPowerPlant {
         try {
             stub.election(msg);
         } catch (StatusRuntimeException e) {
-            logger.debug("[RPC-FAIL] election forward failed: {}", e.getStatus());
+
+            if (e.getStatus().getCode() == Status.Code.UNAVAILABLE) {
+                //logger.warn("Plant {} not reachable, retrying", candidateId);
+                // Retry once
+                try {
+                    stub.election(msg);
+                } catch (StatusRuntimeException ex) {
+
+                    if (ex.getStatus().getCode() == Status.Code.UNAVAILABLE) {
+                        handleCrashOf(extractStubId(stub),this.id);
+                    }
+                }
+            }
         }
     }
 
+    /**
+     * Forwards election result; retries once on transient failure
+     */
+    public void forwardElected(PlantCoordinationServiceBlockingStub stub, long requestId, int winnerId) {
 
-    public void forwardElected(
-            PlantCoordinationServiceBlockingStub stub,
-            long requestId,
-            int winnerId) {
+        if (stub == null) return;
 
         ElectedMessage msg = ElectedMessage.newBuilder()
                 .setRequestId(requestId)
@@ -632,11 +746,26 @@ public class ThermalPowerPlant {
         try {
             stub.elected(msg);
         } catch (StatusRuntimeException e) {
-            logger.debug("[RPC-FAIL] elected forward failed: {}", e.getStatus());
+
+            if (e.getStatus().getCode() == Status.Code.UNAVAILABLE) {
+
+                // Retry once
+                try {
+                    stub.elected(msg);
+                } catch (StatusRuntimeException ex) {
+
+                    if (ex.getStatus().getCode() == Status.Code.UNAVAILABLE) {
+                        handleCrashOf(extractStubId(stub),this.id);
+                    }
+                }
+            }
         }
+
     }
 
-
+    /**
+     * Handles election completion; forwards or handles request
+     */
     public void onElected(long requestId, int winnerId) {
 
         if (exitInProgress) {
@@ -646,6 +775,7 @@ public class ThermalPowerPlant {
         EnergyRequest req;
         PlantCoordinationServiceBlockingStub nextStub;
         ElectionContext ctx;
+        // Removes election context from in‑progress; handles interruption safely
         try {
             stateLock.lock();
             ctx = electionsInProgress.remove(requestId);
@@ -673,6 +803,9 @@ public class ThermalPowerPlant {
         }
     }
 
+    /**
+     * Handles winning election by producing energy
+     */
     private void handleWin(EnergyRequest req) {
     logger.info("[ELECTION-WIN] plant={} request={}", id, req.getTimestamp());
 
@@ -684,6 +817,9 @@ public class ThermalPowerPlant {
     produceEnergy(req);
 }
 
+    /**
+     * Starts plant; registers; announces; starts threads; listens to commands
+     */
     public void start() throws Exception {
         logger.info("Starting ThermalPowerPlant {}", id);
 
@@ -716,6 +852,7 @@ public class ThermalPowerPlant {
     }
 
     private void produceEnergy(EnergyRequest request) {
+        // Simulates energy production; releases plant state; handles exit
         try {
             logger.info("[PRODUCTION-START] plant={} request={}", id, request.getTimestamp());
             sleep((long) request.getAmount());
@@ -734,6 +871,9 @@ public class ThermalPowerPlant {
 
     }
 
+    /**
+     * Initiates shutdown; interrupts threads; disconnects from external services
+     */
     public void stop() {
         stopFlag = true;
         logger.info("Stopping ThermalPowerPlant {}", id);
@@ -763,6 +903,7 @@ public class ThermalPowerPlant {
         }
 
 
+        // Disconnects and closes MQTT client connection
         if (mqttClient != null) {
             try {
                 if (mqttClient.isConnected()) {
@@ -788,7 +929,7 @@ public class ThermalPowerPlant {
 
     private void startCommandListener() {
         Thread commandThread = new Thread(() -> {
-
+            // Reads commands; initiates exit on command; logs errors
             while (!stopFlag) {
                 try {
                     String cmd = STDIN.nextLine();

@@ -19,14 +19,17 @@ message JoinNotification  {
   int32 plantId = 1;
   int32 port = 2;
 }
+message JoinAck {
+  int32 plantId = 1;
+  int32 port = 2;
+}
 
 message ExitNotification  {
   int32 plantId = 1;
 }
-
-message JoinAck {
-  int32 plantId = 1;
-  int32 port = 2;
+message CrashNotification {
+  int32 ChashedPlantId = 1;
+  int32 ChashDetectorPlantId = 2;
 }
 
 service PlantCoordinationService  {
@@ -34,4 +37,5 @@ service PlantCoordinationService  {
   rpc elected(ElectedMessage) returns (Empty);
   rpc notifyJoin(JoinNotification) returns (JoinAck);
   rpc notifyExit(ExitNotification) returns (Empty);
+  rpc notifyCrash(CrashNotification) returns(Empty);
 }

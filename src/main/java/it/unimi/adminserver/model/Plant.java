@@ -4,7 +4,7 @@ public class Plant {
     private int id;
     private static final String address = "localhost";
     private int port;
-    private long lastHeartbeat;
+    private volatile long lastHeartbeat;
 
     public Plant() {}
 

@@ -1,6 +1,6 @@
 package it.unimi.tpp;
 
-import it.unimi.grpc.PlantCoordinationServiceGrpc;
+import it.unimi.grpc.PlantCoordinationServiceGrpc.*;
 import it.unimi.rep.EnergyRequest;
 
 import java.util.Collections;
@@ -11,12 +11,12 @@ import java.util.Map;
 public class ElectionContext {
 
     private final List<Integer> ringOrder;
-    private final Map<Integer, PlantCoordinationServiceGrpc.PlantCoordinationServiceBlockingStub> ringStubs;
+    private final Map<Integer, PlantCoordinationServiceBlockingStub> ringStubs;
     private final EnergyRequest request;
     private final float myBid;
     private volatile boolean participant;
 
-    public ElectionContext(List<Integer> ringOrder, Map<Integer, PlantCoordinationServiceGrpc.PlantCoordinationServiceBlockingStub> ringStubs, EnergyRequest request, float myBid, boolean participant) {
+    public ElectionContext(List<Integer> ringOrder, Map<Integer,PlantCoordinationServiceBlockingStub> ringStubs, EnergyRequest request, float myBid, boolean participant) {
         this.ringOrder = Collections.unmodifiableList(ringOrder);
         this.ringStubs = new HashMap<>(ringStubs);
         this.request = request;
@@ -24,7 +24,7 @@ public class ElectionContext {
         this.participant = participant;
     }
 
-    public Map<Integer, PlantCoordinationServiceGrpc.PlantCoordinationServiceBlockingStub> getRingStubs() {
+    public Map<Integer, PlantCoordinationServiceBlockingStub> getRingStubs() {
         return ringStubs;
     }
 

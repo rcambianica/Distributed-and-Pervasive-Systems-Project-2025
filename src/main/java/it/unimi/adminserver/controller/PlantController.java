@@ -20,6 +20,7 @@ public class PlantController {
 
     @PostMapping
     public ResponseEntity<?> addPlant(@RequestBody Plant plant) throws InterruptedException {
+        // Handles invalid plant properties; returns error message
         try {
             plant.setId(plant.getId());
             plant.setPort(plant.getPort());

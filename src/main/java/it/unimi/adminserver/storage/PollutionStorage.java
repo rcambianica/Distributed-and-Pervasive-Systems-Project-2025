@@ -19,6 +19,9 @@ public class PollutionStorage {
         return instance;
     }
 
+    /**
+     * Adds pollution record, handling potential interruption
+     */
     public void addRecord(Pollution rec) {
         try {
             lock.lock();
@@ -33,6 +36,7 @@ public class PollutionStorage {
     }
 
     public List<Pollution> getAll() {
+        // Returns thread‑safe snapshot of all pollution records
         try {
             lock.lock();
             try {

@@ -28,12 +28,13 @@ public class RenewableEnergyProvider {
     public void start() {
         Thread thread = new Thread(() -> {
             while(true) {
+                // Handles errors during request publication
                 try {
                     EnergyRequest req = generateRequest();
                     String payload = EnergyRequestMapper.serialize(req);
                     MqttMessage msg = new MqttMessage(payload.getBytes());
                     msg.setQos(1);
-                    msg.setRetained(false);
+                    msg.setRetained(true);
                     client.publish(ER_TOPIC, msg);
                     logger.debug("Request published: {}", payload);
                     Thread.sleep(10000);

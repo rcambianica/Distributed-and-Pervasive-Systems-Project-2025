@@ -23,6 +23,7 @@ public class AdminClientApp {
 
         logger.info("Admin Client connected to the Administration Server");
 
+        // Runs menu loop; handles user input; logs errors
         while (true) {
             printMenu();
             String choice = scanner.nextLine();
@@ -59,6 +60,9 @@ public class AdminClientApp {
         System.out.print("Insert your choice: ");
     }
 
+    /**
+     * Retrieves and prints active plants; logs empty result
+     */
     private static void listActivePlants(RestClient restClient) {
         System.out.println("\n--- Active Thermal Power Plants ---");
         List<Plant> plants = restClient.getNetwork();
@@ -77,10 +81,12 @@ public class AdminClientApp {
         long t1;
         long t2;
 
+        // Retrieves and prints average CO2 emissions for given interval
         try {
             System.out.print("Want to insert milliseconds manually? (s/n): ");
             String risp = scanner.nextLine();
 
+            // Gets timestamps from input or defaults; validates input
             if (risp.equalsIgnoreCase("n")) {
                 t1 = Instant.now().minusSeconds(3600).toEpochMilli();
                 t2 = Instant.now().toEpochMilli();

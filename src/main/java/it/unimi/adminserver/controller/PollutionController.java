@@ -31,9 +31,10 @@ public class PollutionController {
     ) {
         List<Pollution> all = storage.getAll();
 
+        // Filters pollution data by timestamp range
         double avg = all.stream()
                 .filter(r -> {
-                    Instant ts = r.getTimestamp();
+                    Instant ts = Instant.ofEpochMilli(r.getTimestamp());
                     return !ts.isBefore(Instant.ofEpochMilli(t1)) &&
                             !ts.isAfter(Instant.ofEpochMilli(t2));
                 })

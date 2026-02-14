@@ -29,6 +29,9 @@ public class SlidingWindowBuffer implements Buffer {
         return all;
     }
 
+    /**
+     * Extracts a sliding window if buffer exceeds the threshold
+     */
     public synchronized List<Measurement> extractWindowIfAvailable() {
         if (buffer.size() < 8) {
             return null;
@@ -36,8 +39,7 @@ public class SlidingWindowBuffer implements Buffer {
 
         List<Measurement> window = new ArrayList<>(buffer.subList(0, 8));
         buffer.subList(0, 4).clear();
-
-        //logger.debug("Sliding window extracted");
         return window;
     }
+
 }

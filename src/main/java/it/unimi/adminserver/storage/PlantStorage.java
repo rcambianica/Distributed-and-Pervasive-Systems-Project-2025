@@ -28,6 +28,9 @@ public class PlantStorage {
         }
     }
 
+    /**
+     * Returns plant matching id, else null, under lock
+     */
     public Plant get(int id) throws InterruptedException {
         lock.lock();
         try {
@@ -40,6 +43,9 @@ public class PlantStorage {
         }
     }
 
+        /**
+         * Adds plant if unique; returns success status
+         */
     public boolean addPlant(Plant plant) throws InterruptedException {
         lock.lock();
         try {

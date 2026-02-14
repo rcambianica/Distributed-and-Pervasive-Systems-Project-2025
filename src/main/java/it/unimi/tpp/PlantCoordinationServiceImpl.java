@@ -21,6 +21,9 @@ public class PlantCoordinationServiceImpl
         this.plant = plant;
     }
 
+    /**
+     * Handles an election message; responds with an empty instance
+     */
     @Override
     public void election(ElectionMessage request, StreamObserver<Empty> responseObserver) {
 
@@ -32,6 +35,9 @@ public class PlantCoordinationServiceImpl
         responseObserver.onCompleted();
     }
 
+    /**
+     * Handles election winner notification; completes RPC
+     */
     @Override
     public void elected(ElectedMessage request, StreamObserver<Empty> responseObserver) {
 
@@ -43,6 +49,9 @@ public class PlantCoordinationServiceImpl
         responseObserver.onCompleted();
     }
 
+    /**
+     * Handles remote plant join and responds with acknowledgement
+     */
     @Override
     public void notifyJoin(JoinNotification request,
                            StreamObserver<JoinAck> responseObserver) {
@@ -70,6 +79,19 @@ public class PlantCoordinationServiceImpl
         int exitingPlantId = request.getPlantId();
         logger.info("[RPC] EXIT received from plant {}", exitingPlantId);
         plant.handleRemoteExit(exitingPlantId);
+        responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
+
+    /**
+     * Handles remote crash notification; exits crashed plant
+     */
+    @Override
+    public void notifyCrash(CrashNotification request, StreamObserver<Empty> responseObserver) {
+        int crashedPlantId = request.getChashedPlantId();
+        int crashDetectorPlantId = request.getChashDetectorPlantId();
+        logger.info("[RPC] CRASH of plant {} received by crash detector plant {}", crashedPlantId, crashDetectorPlantId);
+        plant.handleRemoteExit(crashedPlantId);
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
     }

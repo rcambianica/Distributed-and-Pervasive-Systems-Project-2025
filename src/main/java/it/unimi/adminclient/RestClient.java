@@ -41,6 +41,7 @@ public class RestClient {
         String endpoint = serverBaseUrl + "/pollution/average?t1=" + t1 + "&t2=" + t2;
         logger.debug("GET {}", endpoint);
 
+        // Gets average CO2; handles errors; logs status
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(endpoint))
@@ -66,6 +67,7 @@ public class RestClient {
     public List<Plant> registerPlantAndGetNetwork(Plant plant) {
         List<Plant> network = getNetwork();
         String endpoint = serverBaseUrl + "/plants";
+        // Registers plant; logs success or failure
         try {
             String body = objectMapper.writeValueAsString(plant);
 
@@ -97,6 +99,7 @@ public class RestClient {
 
     public List<Plant> getNetwork() {
         String endpoint = serverBaseUrl + "/plants";
+        // Retrieves plant network; logs errors
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(endpoint))
@@ -125,6 +128,7 @@ public class RestClient {
 
     public void removePlant(int id) {
         String endpoint = serverBaseUrl + "/plants/" + id;
+        // Deletes plant by ID; logs errors
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(endpoint))
@@ -137,6 +141,9 @@ public class RestClient {
         }
     }
 
+    /**
+     * Sends heartbeat for plant; logs errors
+     */
     public void sendHeartbeat(int id) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(
