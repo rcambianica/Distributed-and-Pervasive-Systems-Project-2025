@@ -19,7 +19,7 @@ public class SlidingWindowBuffer implements Buffer {
     @Override
     public synchronized void addMeasurement(Measurement m) {
         buffer.add(m);
-        //logger.debug("Measurement added: {}", m);
+        logger.debug("Measurement added: {}", m);
     }
 
     @Override
@@ -30,7 +30,7 @@ public class SlidingWindowBuffer implements Buffer {
     }
 
     /**
-     * Extracts a sliding window if buffer exceeds the threshold
+     * Extracts a sliding window if the buffer exceeds the threshold
      */
     public synchronized List<Measurement> extractWindowIfAvailable() {
         if (buffer.size() < 8) {

@@ -444,6 +444,17 @@ public class ThermalPowerPlant {
         });
     }
 
+    private void clearEnergyRequest() {
+        try {
+            MqttMessage empty = new MqttMessage(new byte[0]);
+            empty.setRetained(true);
+            empty.setQos(0);
+            mqttClient.publish(ER_TOPIC, empty);
+        } catch (MqttException e) {
+            logger.error("Failed to clear retained energy request", e);
+        }
+    }
+
     private void startPollutionPublisherThread() {
         Thread pollutionPublisherThread = new Thread(() -> {
             while (!stopFlag) {
@@ -489,7 +500,7 @@ public class ThermalPowerPlant {
                     restClient.sendHeartbeat(id);
                     sleep(500);
                 } catch (Exception e) {
-                    logger.warn("Heartbeat failed", e);
+                    //logger.warn("Heartbeat failed", e);
                 }
             }
         });
@@ -813,6 +824,8 @@ public class ThermalPowerPlant {
         logger.warn("Plant {} already busy, cannot handle win for request {}", id, req.getTimestamp());
         return;
     }
+
+    clearEnergyRequest();
 
     produceEnergy(req);
 }
