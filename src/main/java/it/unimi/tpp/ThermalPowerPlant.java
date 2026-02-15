@@ -167,8 +167,9 @@ public class ThermalPowerPlant {
                 .build();
 
         for (Plant p : initialNetwork) {
+                ManagedChannel channel = null;
                 try {
-                    ManagedChannel channel =
+                    channel =
                             ManagedChannelBuilder.forAddress("localhost", p.getPort())
                                     .usePlaintext()
                                     .build();
@@ -187,6 +188,10 @@ public class ThermalPowerPlant {
 
                 } catch (Exception e) {
                     logger.warn("JOIN failed towards plant {}", p.getId(), e);
+                } finally {
+                    if (channel != null) {
+                        channel.shutdown();
+                    }
                 }
         }
     }
@@ -530,7 +535,6 @@ public class ThermalPowerPlant {
         averagePublisherThread.setDaemon(true);
         averagePublisherThread.start();
     }
-
 
     /**
      * Sends periodic heartbeat to REST endpoint
