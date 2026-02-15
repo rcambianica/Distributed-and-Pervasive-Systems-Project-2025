@@ -5,7 +5,8 @@ import it.unimi.adminserver.model.Pollution;
 import it.unimi.adminserver.storage.PlantStorage;
 import it.unimi.adminserver.storage.PollutionStorage;
 
-import it.unimi.tpp.PollutionMapper;
+import it.unimi.tpp.PollutionPacket;
+import it.unimi.tpp.PollutionPacketMapper;
 import org.eclipse.paho.client.mqttv3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,16 +42,20 @@ public class AdminServerApp {
 
             mqttClient.subscribe(POLLUTION_TOPIC, (topic, message) -> {
 
-                Pollution record = PollutionMapper.deserialize(new String(message.getPayload()));
+                PollutionPacket packet =
+                        PollutionPacketMapper.deserialize(new String(message.getPayload()));
 
-                PollutionStorage.getInstance().addRecord(record);
+                for (Pollution rec : packet.getAverages()) {
+                    PollutionStorage.getInstance().addRecord(rec);
+                    logger.debug(
+                            "[MQTT-POLLUTION] plant={} value={} ts={}",
+                            rec.getPlantId(),
+                            rec.getValue(),
+                            rec.getTimestamp()
+                    );
+                }
 
-                logger.debug(
-                        "[MQTT-POLLUTION] plant={} value={} ts={}",
-                        record.getPlantId(),
-                        record.getValue(),
-                        record.getTimestamp()
-                );
+
             });
 
             logger.info("Admin Server subscribed to topic {}", POLLUTION_TOPIC);

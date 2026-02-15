@@ -58,8 +58,15 @@ public class ThermalPowerPlant {
     private volatile boolean exitInProgress = false;
     private volatile boolean stopFlag = false;
 
+    private final List<Pollution> pendingAverages = new ArrayList<>();
+    private final MyLock avgLock = new MyLock();
+
+
     private Thread mqttOutboundThread;
     private Thread heartbeatThread;
+    private Thread averageComputationThread;
+    private Thread averagePublisherThread;
+
 
     public ThermalPowerPlant(int id) {
         this.id = id;
@@ -455,40 +462,75 @@ public class ThermalPowerPlant {
         }
     }
 
-    private void startPollutionPublisherThread() {
-        Thread pollutionPublisherThread = new Thread(() -> {
+    private void startAverageComputationThread() {
+        averageComputationThread = new Thread(() -> {
             while (!stopFlag) {
-                // Publishes average pollution measurement to MQTT broker
                 try {
                     List<Measurement> window = buffer.extractWindowIfAvailable();
                     if (window == null) {
-                        Thread.sleep(200);  // evita busy spin
+                        Thread.sleep(200);
                         continue;
                     }
 
+                    Pollution avg = Pollution.from(window, id);
 
-                    Pollution avg =
-                            Pollution.from(window, id);
+                    avgLock.lock();
+                    try {
+                        pendingAverages.add(avg);
+                    } finally {
+                        avgLock.unlock();
+                    }
 
-                    String payload =
-                            PollutionMapper.serialize(avg);
+                } catch (Exception e) {
+                    //logger.error("Error computing pollution average", e);
+                }
+            }
+        });
 
-                    MqttMessage msg =
-                            new MqttMessage(payload.getBytes());
-                    msg.setQos(0);
+        averageComputationThread.setDaemon(true);
+        averageComputationThread.start();
+    }
+
+    private void startAveragePublisherThread() {
+        averagePublisherThread = new Thread(() -> {
+            while (!stopFlag) {
+                try {
+                    Thread.sleep(10_000);
+
+                    List<Pollution> toSend;
+
+                    avgLock.lock();
+                    try {
+                        if (pendingAverages.isEmpty())
+                            continue;
+
+                        toSend = new ArrayList<>(pendingAverages);
+                        pendingAverages.clear();
+                    } finally {
+                        avgLock.unlock();
+                    }
+
+                    PollutionPacket packet =
+                            new PollutionPacket(id, System.currentTimeMillis(), toSend);
+
+                    String payload = PollutionPacketMapper.serialize(packet);
+
+                    MqttMessage msg = new MqttMessage(payload.getBytes());
+                    msg.setQos(1);
                     msg.setRetained(false);
 
                     safePublish(POLLUTION_TOPIC, msg);
 
                 } catch (Exception e) {
-                    logger.error("Error publishing pollution averages", e);
+                    //logger.error("Error publishing pollution packet", e);
                 }
             }
         });
 
-        pollutionPublisherThread.setDaemon(true);
-        pollutionPublisherThread.start();
+        averagePublisherThread.setDaemon(true);
+        averagePublisherThread.start();
     }
+
 
     /**
      * Sends periodic heartbeat to REST endpoint
@@ -859,7 +901,10 @@ public class ThermalPowerPlant {
         startElectionThread();
         connectMQTTSubscriberThread();
         startMqttOutboundThread();
-        startPollutionPublisherThread();
+
+        startAverageComputationThread();
+        startAveragePublisherThread();
+
 
         startCommandListener();
     }
@@ -899,6 +944,8 @@ public class ThermalPowerPlant {
         try {
             if (mqttOutboundThread != null) mqttOutboundThread.interrupt();
             if (heartbeatThread != null) heartbeatThread.interrupt();
+            if (averageComputationThread != null) averageComputationThread.interrupt();
+            if (averagePublisherThread != null) averagePublisherThread.interrupt();
         } catch (Exception ignored) {}
 
 
