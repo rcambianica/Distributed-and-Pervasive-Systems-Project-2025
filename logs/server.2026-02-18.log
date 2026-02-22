@@ -1,0 +1,5 @@
+2026-02-18 10:09:49,059 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 49368 (/home/ric/IdeaProjects/DPS_project/build/classes/java/main started by ric in /home/ric/IdeaProjects/DPS_project)
+2026-02-18 10:09:49,071 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-18 10:09:51,324 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-18 10:09:51,327 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-18 10:09:51,831 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 3.162 seconds (JVM running for 3.782)

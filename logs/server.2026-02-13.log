@@ -1,0 +1,149 @@
+2026-02-13 17:07:32,492 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 9661 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 17:07:32,496 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 17:07:34,856 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 17:07:34,870 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 17:07:36,203 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 4.313 seconds (JVM running for 5.395)
+2026-02-13 17:12:14,237 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 13214 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 17:12:14,238 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 17:12:15,508 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 17:12:15,510 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 17:12:15,824 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.771 seconds (JVM running for 2.153)
+2026-02-13 17:14:46,885 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 14273 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 17:14:46,887 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 17:14:48,275 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 17:14:48,277 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 17:14:48,745 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 2.137 seconds (JVM running for 2.639)
+2026-02-13 17:20:18,998 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 16669 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 17:20:19,000 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 17:20:20,073 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 17:20:20,074 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 17:20:20,374 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.606 seconds (JVM running for 2.007)
+2026-02-13 18:16:04,055 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 22120 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 18:16:04,057 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 18:16:05,128 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 18:16:05,131 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 18:16:05,450 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.59 seconds (JVM running for 1.945)
+2026-02-13 18:57:51,620 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 26358 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 18:57:51,622 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 18:57:52,707 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 18:57:52,713 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 18:57:53,032 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.579 seconds (JVM running for 1.936)
+2026-02-13 19:08:37,523 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 29080 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 19:08:37,524 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 19:08:38,595 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 19:08:38,597 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 19:08:38,872 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.511 seconds (JVM running for 1.843)
+2026-02-13 19:13:25,612 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 31176 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 19:13:25,613 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 19:13:26,667 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 19:13:26,672 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 19:13:26,979 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.557 seconds (JVM running for 1.922)
+2026-02-13 19:13:44,915 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 32240 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 19:13:44,917 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 19:13:46,034 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 19:13:46,039 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 19:13:46,366 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.616 seconds (JVM running for 1.956)
+2026-02-13 19:16:14,528 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 33800 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 19:16:14,530 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 19:16:15,596 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 19:16:15,599 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 19:16:15,910 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.545 seconds (JVM running for 1.891)
+2026-02-13 19:24:53,029 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 35844 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 19:24:53,031 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 19:24:54,593 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 19:24:54,595 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 19:24:55,112 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 2.356 seconds (JVM running for 2.896)
+2026-02-13 19:32:25,534 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 39547 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 19:32:25,535 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 19:32:26,714 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 19:32:26,716 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 19:32:27,034 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.697 seconds (JVM running for 2.051)
+2026-02-13 19:49:37,132 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 42605 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 19:49:37,135 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 19:49:39,226 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 19:49:39,231 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 19:49:39,878 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 3.087 seconds (JVM running for 3.5)
+2026-02-13 19:53:43,967 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 44672 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 19:53:43,969 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 19:53:45,097 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 19:53:45,102 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 19:53:45,392 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.608 seconds (JVM running for 1.918)
+2026-02-13 20:00:48,035 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 46934 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 20:00:48,037 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 20:00:49,117 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 20:00:49,119 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 20:00:49,447 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.582 seconds (JVM running for 1.941)
+2026-02-13 20:47:04,866 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 51396 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 20:47:04,867 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 20:47:06,029 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 20:47:06,032 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 20:47:06,328 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.662 seconds (JVM running for 2.05)
+2026-02-13 21:02:50,127 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 56027 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 21:02:50,129 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 21:02:51,234 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 21:02:51,240 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 21:02:51,542 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.595 seconds (JVM running for 1.978)
+2026-02-13 21:14:02,855 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 57435 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 21:14:02,858 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 21:14:04,017 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 21:14:04,020 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 21:14:04,327 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.703 seconds (JVM running for 2.142)
+2026-02-13 21:19:29,720 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 59234 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 21:19:29,722 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 21:19:30,818 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 21:19:30,824 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 21:19:31,129 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.579 seconds (JVM running for 1.96)
+2026-02-13 21:23:32,341 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 60952 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 21:23:32,343 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 21:23:33,439 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 21:23:33,445 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 21:23:33,743 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.607 seconds (JVM running for 1.965)
+2026-02-13 21:25:03,454 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-13 21:25:03,454 WARN  it.unimi.adminserver.AdminServerApp - Plant 3 considered crashed (heartbeat timeout)
+2026-02-13 21:25:23,455 WARN  it.unimi.adminserver.AdminServerApp - Plant 1 considered crashed (heartbeat timeout)
+2026-02-13 21:28:46,831 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 63141 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 21:28:46,833 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 21:28:47,912 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 21:28:47,918 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 21:28:48,229 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.582 seconds (JVM running for 1.901)
+2026-02-13 21:38:23,238 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 65713 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 21:38:23,240 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 21:38:24,333 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 21:38:24,338 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 21:38:24,643 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.595 seconds (JVM running for 1.937)
+2026-02-13 21:39:14,345 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-13 21:41:29,349 WARN  it.unimi.adminserver.AdminServerApp - Plant 3 considered crashed (heartbeat timeout)
+2026-02-13 21:41:54,349 WARN  it.unimi.adminserver.AdminServerApp - Plant 5 considered crashed (heartbeat timeout)
+2026-02-13 21:41:59,350 WARN  it.unimi.adminserver.AdminServerApp - Plant 4 considered crashed (heartbeat timeout)
+2026-02-13 21:42:29,351 WARN  it.unimi.adminserver.AdminServerApp - Plant 1 considered crashed (heartbeat timeout)
+2026-02-13 21:43:24,409 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 68176 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 21:43:24,410 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 21:43:25,522 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 21:43:25,526 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 21:43:25,931 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.715 seconds (JVM running for 2.058)
+2026-02-13 21:44:25,531 WARN  it.unimi.adminserver.AdminServerApp - Plant 3 considered crashed (heartbeat timeout)
+2026-02-13 21:45:15,532 WARN  it.unimi.adminserver.AdminServerApp - Plant 1 considered crashed (heartbeat timeout)
+2026-02-13 21:45:15,533 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-13 21:45:15,533 WARN  it.unimi.adminserver.AdminServerApp - Plant 4 considered crashed (heartbeat timeout)
+2026-02-13 21:51:47,914 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 70619 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 21:51:47,916 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 21:51:49,034 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 21:51:49,039 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 21:51:49,353 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.603 seconds (JVM running for 1.953)
+2026-02-13 21:57:04,052 WARN  it.unimi.adminserver.AdminServerApp - Plant 3 considered crashed (heartbeat timeout)
+2026-02-13 21:57:14,053 WARN  it.unimi.adminserver.AdminServerApp - Plant 4 considered crashed (heartbeat timeout)
+2026-02-13 21:57:19,053 WARN  it.unimi.adminserver.AdminServerApp - Plant 1 considered crashed (heartbeat timeout)
+2026-02-13 21:57:24,054 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-13 22:02:21,026 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 73060 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-13 22:02:21,027 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-13 22:02:22,110 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-13 22:02:22,112 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-13 22:02:22,393 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.547 seconds (JVM running for 1.876)
+2026-02-13 22:09:07,125 WARN  it.unimi.adminserver.AdminServerApp - Plant 1 considered crashed (heartbeat timeout)
+2026-02-13 22:09:07,125 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-13 22:09:12,126 WARN  it.unimi.adminserver.AdminServerApp - Plant 3 considered crashed (heartbeat timeout)
+2026-02-13 22:09:17,126 WARN  it.unimi.adminserver.AdminServerApp - Plant 4 considered crashed (heartbeat timeout)
+2026-02-13 22:11:57,131 WARN  it.unimi.adminserver.AdminServerApp - Plant 1 considered crashed (heartbeat timeout)
+2026-02-13 22:11:57,131 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-13 22:11:57,131 WARN  it.unimi.adminserver.AdminServerApp - Plant 3 considered crashed (heartbeat timeout)
+2026-02-13 22:11:57,131 WARN  it.unimi.adminserver.AdminServerApp - Plant 4 considered crashed (heartbeat timeout)

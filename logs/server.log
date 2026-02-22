@@ -1,0 +1,8 @@
+2026-02-21 16:16:07,349 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 54495 (/home/ric/IdeaProjects/DPS_project/build/classes/java/main started by ric in /home/ric/IdeaProjects/DPS_project)
+2026-02-21 16:16:07,353 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-21 16:16:08,611 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-21 16:16:08,613 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-21 16:16:08,944 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.842 seconds (JVM running for 2.305)
+2026-02-21 16:20:46,892 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-21 16:20:48,393 WARN  it.unimi.adminserver.AdminServerApp - Plant 3 considered crashed (heartbeat timeout)
+2026-02-21 16:20:49,893 WARN  it.unimi.adminserver.AdminServerApp - Plant 4 considered crashed (heartbeat timeout)

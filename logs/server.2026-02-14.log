@@ -1,0 +1,173 @@
+2026-02-14 08:26:47,423 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 47288 (/home/ric/Scrivania/DPS_project/build/classes/java/main started by ric in /home/ric/Scrivania/DPS_project)
+2026-02-14 08:26:47,427 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-14 08:26:48,741 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-14 08:26:48,742 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-14 08:26:49,105 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.927 seconds (JVM running for 2.396)
+2026-02-14 08:49:08,388 WARN  it.unimi.adminserver.AdminServerApp - Plant 1 considered crashed (heartbeat timeout)
+2026-02-14 08:49:08,399 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-14 08:49:08,417 WARN  it.unimi.adminserver.AdminServerApp - Plant 3 considered crashed (heartbeat timeout)
+2026-02-14 08:49:08,418 WARN  it.unimi.adminserver.AdminServerApp - Plant 4 considered crashed (heartbeat timeout)
+2026-02-14 09:00:16,808 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 52555 (/home/ric/IdeaProjects/DPS_project/build/classes/java/main started by ric in /home/ric/IdeaProjects/DPS_project)
+2026-02-14 09:00:16,811 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-14 09:00:18,152 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-14 09:00:18,155 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-14 09:00:18,521 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 2.058 seconds (JVM running for 2.542)
+2026-02-14 09:01:48,161 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-14 09:12:01,636 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 55379 (/home/ric/IdeaProjects/DPS_project/build/classes/java/main started by ric in /home/ric/IdeaProjects/DPS_project)
+2026-02-14 09:12:01,637 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-14 09:12:02,832 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-14 09:12:02,837 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-14 09:12:03,179 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.741 seconds (JVM running for 2.18)
+2026-02-14 09:13:02,844 WARN  it.unimi.adminserver.AdminServerApp - Plant 3 considered crashed (heartbeat timeout)
+2026-02-14 09:47:43,372 WARN  it.unimi.adminserver.AdminServerApp - Plant 4 considered crashed (heartbeat timeout)
+2026-02-14 10:33:19,654 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 69808 (/home/ric/IdeaProjects/DPS_project/build/classes/java/main started by ric in /home/ric/IdeaProjects/DPS_project)
+2026-02-14 10:33:19,656 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-14 10:33:21,228 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-14 10:33:21,233 ERROR it.unimi.adminserver.AdminServerApp - Failed to start MQTT subscriber
+org.eclipse.paho.client.mqttv3.MqttException: Client connesso
+	at org.eclipse.paho.client.mqttv3.internal.ExceptionHelper.createMqttException(ExceptionHelper.java:31)
+	at org.eclipse.paho.client.mqttv3.internal.ClientComms.close(ClientComms.java:239)
+	at org.eclipse.paho.client.mqttv3.MqttAsyncClient.close(MqttAsyncClient.java:1615)
+	at org.eclipse.paho.client.mqttv3.MqttClient.close(MqttClient.java:613)
+	at it.unimi.adminserver.AdminServerApp.startMQTTSubscriber(AdminServerApp.java:52)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleElement.invoke(InitDestroyAnnotationBeanPostProcessor.java:389)
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleMetadata.invokeInitMethods(InitDestroyAnnotationBeanPostProcessor.java:333)
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor.postProcessBeforeInitialization(InitDestroyAnnotationBeanPostProcessor.java:157)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyBeanPostProcessorsBeforeInitialization(AbstractAutowireCapableBeanFactory.java:440)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1796)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:620)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:955)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:929)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:591)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:147)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:732)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:409)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:308)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1300)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1289)
+	at it.unimi.adminserver.AdminServerApp.main(AdminServerApp.java:108)
+2026-02-14 10:33:21,529 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 2.133 seconds (JVM running for 2.525)
+2026-02-14 10:34:41,758 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-14 10:38:31,434 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 72143 (/home/ric/IdeaProjects/DPS_project/build/classes/java/main started by ric in /home/ric/IdeaProjects/DPS_project)
+2026-02-14 10:38:31,436 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-14 10:38:32,854 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-14 10:38:32,858 ERROR it.unimi.adminserver.AdminServerApp - Failed to start MQTT subscriber
+org.eclipse.paho.client.mqttv3.MqttException: Client connesso
+	at org.eclipse.paho.client.mqttv3.internal.ExceptionHelper.createMqttException(ExceptionHelper.java:31)
+	at org.eclipse.paho.client.mqttv3.internal.ClientComms.close(ClientComms.java:239)
+	at org.eclipse.paho.client.mqttv3.MqttAsyncClient.close(MqttAsyncClient.java:1615)
+	at org.eclipse.paho.client.mqttv3.MqttClient.close(MqttClient.java:613)
+	at it.unimi.adminserver.AdminServerApp.startMQTTSubscriber(AdminServerApp.java:52)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleElement.invoke(InitDestroyAnnotationBeanPostProcessor.java:389)
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleMetadata.invokeInitMethods(InitDestroyAnnotationBeanPostProcessor.java:333)
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor.postProcessBeforeInitialization(InitDestroyAnnotationBeanPostProcessor.java:157)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyBeanPostProcessorsBeforeInitialization(AbstractAutowireCapableBeanFactory.java:440)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1796)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:620)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:955)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:929)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:591)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:147)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:732)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:409)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:308)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1300)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1289)
+	at it.unimi.adminserver.AdminServerApp.main(AdminServerApp.java:108)
+2026-02-14 10:38:33,180 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.951 seconds (JVM running for 2.282)
+2026-02-14 10:40:21,895 WARN  it.unimi.adminserver.AdminServerApp - Plant 3 considered crashed (heartbeat timeout)
+2026-02-14 10:42:46,924 WARN  it.unimi.adminserver.AdminServerApp - Plant 1 considered crashed (heartbeat timeout)
+2026-02-14 10:42:48,425 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-14 10:42:49,927 WARN  it.unimi.adminserver.AdminServerApp - Plant 4 considered crashed (heartbeat timeout)
+2026-02-14 11:31:28,056 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 77648 (/home/ric/IdeaProjects/DPS_project/build/classes/java/main started by ric in /home/ric/IdeaProjects/DPS_project)
+2026-02-14 11:31:28,058 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-14 11:31:29,942 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-14 11:31:29,948 ERROR it.unimi.adminserver.AdminServerApp - Failed to start MQTT subscriber
+org.eclipse.paho.client.mqttv3.MqttException: Client connesso
+	at org.eclipse.paho.client.mqttv3.internal.ExceptionHelper.createMqttException(ExceptionHelper.java:31)
+	at org.eclipse.paho.client.mqttv3.internal.ClientComms.close(ClientComms.java:239)
+	at org.eclipse.paho.client.mqttv3.MqttAsyncClient.close(MqttAsyncClient.java:1615)
+	at org.eclipse.paho.client.mqttv3.MqttClient.close(MqttClient.java:613)
+	at it.unimi.adminserver.AdminServerApp.startMQTTSubscriber(AdminServerApp.java:52)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleElement.invoke(InitDestroyAnnotationBeanPostProcessor.java:389)
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleMetadata.invokeInitMethods(InitDestroyAnnotationBeanPostProcessor.java:333)
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor.postProcessBeforeInitialization(InitDestroyAnnotationBeanPostProcessor.java:157)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyBeanPostProcessorsBeforeInitialization(AbstractAutowireCapableBeanFactory.java:440)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1796)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:620)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:955)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:929)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:591)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:147)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:732)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:409)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:308)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1300)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1289)
+	at it.unimi.adminserver.AdminServerApp.main(AdminServerApp.java:108)
+2026-02-14 11:31:30,504 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 2.655 seconds (JVM running for 3.051)
+2026-02-14 11:32:03,969 WARN  it.unimi.adminserver.AdminServerApp - Plant 1 considered crashed (heartbeat timeout)
+2026-02-14 12:16:52,311 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 82968 (/home/ric/IdeaProjects/DPS_project/build/classes/java/main started by ric in /home/ric/IdeaProjects/DPS_project)
+2026-02-14 12:16:52,312 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-14 12:16:53,695 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-14 12:16:53,696 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-14 12:16:54,158 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 2.052 seconds (JVM running for 2.443)
+2026-02-14 12:17:06,202 WARN  it.unimi.adminserver.AdminServerApp - Plant 1 considered crashed (heartbeat timeout)
+2026-02-14 12:17:21,206 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-14 12:18:07,221 WARN  it.unimi.adminserver.AdminServerApp - Plant 3 considered crashed (heartbeat timeout)
+2026-02-14 12:21:46,286 WARN  it.unimi.adminserver.AdminServerApp - Plant 4 considered crashed (heartbeat timeout)
+2026-02-14 12:35:31,906 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 85794 (/home/ric/IdeaProjects/DPS_project/build/classes/java/main started by ric in /home/ric/IdeaProjects/DPS_project)
+2026-02-14 12:35:31,907 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-14 12:35:32,952 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-14 12:35:32,957 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-14 12:35:33,258 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.535 seconds (JVM running for 1.847)
+2026-02-14 12:40:42,971 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 87986 (/home/ric/IdeaProjects/DPS_project/build/classes/java/main started by ric in /home/ric/IdeaProjects/DPS_project)
+2026-02-14 12:40:42,973 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-14 12:40:44,673 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-14 12:40:44,675 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-14 12:40:44,991 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 2.203 seconds (JVM running for 2.565)
+2026-02-14 12:42:04,196 WARN  it.unimi.adminserver.AdminServerApp - Plant 4 considered crashed (heartbeat timeout)
+2026-02-14 12:42:20,199 WARN  it.unimi.adminserver.AdminServerApp - Plant 3 considered crashed (heartbeat timeout)
+2026-02-14 12:42:21,700 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-14 17:35:40,822 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 13613 (/home/ric/IdeaProjects/DPS_project/build/classes/java/main started by ric in /home/ric/IdeaProjects/DPS_project)
+2026-02-14 17:35:40,824 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-14 17:35:42,202 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-14 17:35:42,208 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-14 17:35:42,558 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 2.048 seconds (JVM running for 2.608)
+2026-02-14 17:41:09,825 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
+2026-02-14 17:49:45,437 INFO  it.unimi.adminserver.AdminServerApp - Starting AdminServerApp using Java 17.0.18 on master with PID 15860 (/home/ric/IdeaProjects/DPS_project/build/classes/java/main started by ric in /home/ric/IdeaProjects/DPS_project)
+2026-02-14 17:49:45,439 INFO  it.unimi.adminserver.AdminServerApp - No active profile set, falling back to 1 default profile: "default"
+2026-02-14 17:49:46,758 INFO  it.unimi.adminserver.AdminServerApp - Admin Server connected to MQTT broker
+2026-02-14 17:49:46,764 INFO  it.unimi.adminserver.AdminServerApp - Admin Server subscribed to topic pollution/averages
+2026-02-14 17:49:47,142 INFO  it.unimi.adminserver.AdminServerApp - Started AdminServerApp in 1.962 seconds (JVM running for 2.461)
+2026-02-14 17:51:07,795 WARN  it.unimi.adminserver.AdminServerApp - Plant 3 considered crashed (heartbeat timeout)
+2026-02-14 17:51:17,798 WARN  it.unimi.adminserver.AdminServerApp - Plant 4 considered crashed (heartbeat timeout)
+2026-02-14 17:51:31,301 WARN  it.unimi.adminserver.AdminServerApp - Plant 1 considered crashed (heartbeat timeout)
+2026-02-14 17:51:36,803 WARN  it.unimi.adminserver.AdminServerApp - Plant 2 considered crashed (heartbeat timeout)
